@@ -532,9 +532,9 @@ FROM
 
 
 
-####[1050. Actors and Directors Who Cooperated At Least Three Times](https://leetcode-cn.com/problems/actors-and-directors-who-cooperated-at-least-three-times/)
+####[1050. 合作至少三次的演员和导演](https://leetcode-cn.com/problems/actors-and-directors-who-cooperated-at-least-three-times/)
 
-able: ActorDirector
+table: ActorDirector
 
 ```mysql
 +-------------+---------+
@@ -592,4 +592,138 @@ GROUP BY
 HAVING 
     COUNT(ACTOR_ID) >= 3;
 ```
+
+
+
+#### [077. Project Employees III](https://leetcode-cn.com/problems/project-employees-iii/)
+
+Table: Project
+
+```mysql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| project_id  | int     |
+| employee_id | int     |
++-------------+---------+
+```
+
+(project_id, employee_id) is the primary key of this table.
+employee_id is a foreign key to Employee table.
+Table: Employee
+
+```mysql
++------------------+---------+
+| Column Name      | Type    |
++------------------+---------+
+| employee_id      | int     |
+| name             | varchar |
+| experience_years | int     |
++------------------+---------+
+```
+employee_id is the primary key of this table.
+
+
+Write an SQL query that reports the most experienced employees in each project. In case of a tie, report all employees with the maximum number of experience years.
+
+The query result format is in the following example:
+
+Project table:
+```mysql
++-------------+-------------+
+| project_id  | employee_id |
++-------------+-------------+
+| 1           | 1           |
+| 1           | 2           |
+| 1           | 3           |
+| 2           | 1           |
+| 2           | 4           |
++-------------+-------------+
+```
+
+Employee table:
+```mysql
++-------------+--------+------------------+
+| employee_id | name   | experience_years |
++-------------+--------+------------------+
+| 1           | Khaled | 3                |
+| 2           | Ali    | 2                |
+| 3           | John   | 3                |
+| 4           | Doe    | 2                |
++-------------+--------+------------------+
+```
+
+Result table:
+```mysql
++-------------+---------------+
+| project_id  | employee_id   |
++-------------+---------------+
+| 1           | 1             |
+| 1           | 3             |
+| 2           | 1             |
++-------------+---------------+
+```
+Both employees with id 1 and 3 have the most experience among the employees of the first project. For the second project, the employee with id 1 has the most experience.
+
+##### 三表JOIN
+
+```mysql
+SELECT 
+    OP.project_id,
+    OE.employee_id
+FROM
+    Project OP
+    JOIN
+    Employee OE ON OP.employee_id = OE.employee_id
+    JOIN
+    (
+        SELECT
+            project_id,
+            MAX(experience_years) max_year
+        FROM 
+            Project P
+            JOIN
+            Employee E ON P.employee_id = E.employee_id
+        GROUP BY 
+            project_id
+    ) OY ON OE.experience_years = OY.max_year AND OP.project_id = OY.project_id
+```
+
+##### 子查询，一对结果
+
+```mysql
+SELECT 
+    P.project_id,
+    E.employee_id
+FROM
+    Project P
+    JOIN
+    Employee E
+    ON P.employee_id = E.employee_id
+WHERE (P.project_id, E.experience_years) IN(
+                                            SELECT 
+                                                P1.project_id,
+                                                MAX(E1.experience_years)
+                                            FROM
+                                                Project P1
+                                                JOIN
+                                                Employee E1
+                                                ON P1.employee_id = E1.employee_id
+                                            GROUP BY P1.project_id
+                                        	)
+```
+
+##### 结果对比
+
+|次数| 三表join | 子查询 |
+| -------- | ------ | -------- |
+|          | 679 ms, 在所有 MySQL 提交中击败了60.00% |632 ms, 在所有 MySQL 提交中击败了69.09%|
+| | 721 ms, 在所有 MySQL 提交中击败了45.45% |842 ms, 在所有 MySQL 提交中击败了36.36%|
+| | 725 ms, 在所有 MySQL 提交中击败了45.45% |513 ms, 在所有 MySQL 提交中击败了98.18%|
+| | 537 ms, 在所有 MySQL 提交中击败了90.91%的 |558 ms, 在所有 MySQL 提交中击败了83.64%|
+| | 532 ms, 在所有 MySQL 提交中击败了92.73% |597 ms, 在所有 MySQL 提交中击败了74.55%|
+
+浮动太大，不知道该说哪个更快……
+
+##### ???更好的做法（排序函数
 
