@@ -532,4 +532,64 @@ FROM
 
 
 
- 
+####[1050. Actors and Directors Who Cooperated At Least Three Times](https://leetcode-cn.com/problems/actors-and-directors-who-cooperated-at-least-three-times/)
+
+able: ActorDirector
+
+```mysql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| actor_id    | int     |
+| director_id | int     |
+| timestamp   | int     |
++-------------+---------+
+```
+timestamp is the primary key column for this table.
+
+
+Write a SQL query for a report that provides the pairs (actor_id, director_id) where the actor have cooperated with the director at least 3 times.
+
+Example:
+
+ActorDirector table:
+```mysql
++-------------+-------------+-------------+
+| actor_id    | director_id | timestamp   |
++-------------+-------------+-------------+
+| 1           | 1           | 0           |
+| 1           | 1           | 1           |
+| 1           | 1           | 2           |
+| 1           | 2           | 3           |
+| 1           | 2           | 4           |
+| 2           | 1           | 5           |
+| 2           | 1           | 6           |
++-------------+-------------+-------------+
+```
+
+Result table:
+```mysql
++-------------+-------------+
+| actor_id    | director_id |
++-------------+-------------+
+| 1           | 1           |
++-------------+-------------+
+```
+
+
+
+##### GROUP BY, HAVING(369 ms, 83.11%)
+
+```mysql
+SELECT
+    actor_id ACTOR_ID,
+    director_id DIRECTOR_ID
+FROM 
+    ActorDirector
+GROUP BY
+    ACTOR_ID,
+    DIRECTOR_ID
+HAVING 
+    COUNT(ACTOR_ID) >= 3;
+```
+
