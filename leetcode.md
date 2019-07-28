@@ -727,3 +727,78 @@ WHERE (P.project_id, E.experience_years) IN(
 
 ##### ???更好的做法（排序函数
 
+
+
+#### [603. 连续空余座位](https://leetcode-cn.com/problems/consecutive-available-seats/)
+
+几个朋友来到电影院的售票处，准备预约连续空余座位。
+
+你能利用表 cinema ，帮他们写一个查询语句，获取所有空余座位，并将它们按照 seat_id 排序后返回吗？
+
+| seat_id | free |
+| ------- | ---- |
+| 1       | 1    |
+| 2       | 0    |
+| 3       | 1    |
+| 4       | 1    |
+| 5       | 1    |
+
+
+对于如上样例，你的查询语句应该返回如下结果。
+
+ 
+
+| seat_id |
+| ------- |
+| 3       |
+| 4       |
+| 5       |
+注意：
+
+seat_id 字段是一个自增的整数，free 字段是布尔类型（'1' 表示空余， '0' 表示已被占据）。
+连续空余座位的定义是大于等于 2 个连续空余的座位。
+
+##### INNER JOIN
+
+on内可以使用OR或AND等
+
+```mysql
+SELECT 
+    DISTINCT(C1.seat_id) AS seat_id
+FROM
+    cinema C1
+    INNER JOIN
+    cinema C2
+    ON 
+    C1.seat_id = C2.seat_id +1 
+    OR
+    C1.seat_id = C2.seat_id -1 
+WHERE 
+    C1.free = 1 
+    AND
+    C2.free = 1
+ORDER BY seat_id;
+```
+
+
+
+判断连续(也可以使用abs）：
+
+```mysql
+SELECT 
+    DISTINCT(C1.seat_id) AS seat_id
+FROM
+    cinema C1
+    INNER JOIN
+    cinema C2
+    ON 
+    abs(C1.seat_id - C2.seat_id) =1
+WHERE 
+    C1.free = 1 
+    AND
+    C2.free = 1
+ORDER BY seat_id;
+```
+
+
+
