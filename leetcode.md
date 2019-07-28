@@ -1,5 +1,8 @@
 1. 子查询性能vs联结
+
 2. 聚合函数性能VSORDER BY和LIMIT
+
+### 查询类
 
 #### [1082. Sales Analysis I](https://leetcode-cn.com/problems/sales-analysis-i/)
 
@@ -420,5 +423,60 @@ LIMIT 1;
 同1082一样
 
 
+
+#### [584. 寻找用户推荐人](https://leetcode-cn.com/problems/find-customer-referee/)
+
+给定表 customer ，里面保存了所有客户信息和他们的推荐人。
+
+```mysql
++------+------+-----------+
+| id   | name | referee_id|
++------+------+-----------+
+|    1 | Will |      NULL |
+|    2 | Jane |      NULL |
+|    3 | Alex |         2 |
+|    4 | Bill |      NULL |
+|    5 | Zack |         1 |
+|    6 | Mark |         2 |
++------+------+-----------+
+```
+写一个查询语句，返回一个编号列表，列表中编号的推荐人的编号都 不是 2。
+
+对于上面的示例数据，结果为：
+
+```mys
++------+
+| name |
++------+
+| Will |
+| Jane |
+| Bill |
+| Zack |
++------+
+```
+
+##### !=和NULL值
+
+```mysql
+SELECT 
+    name
+FROM
+    customer
+WHERE
+    referee_id != 2
+    OR
+    referee_id IS NULL;
+```
+
+根据给的结果可以看出来，需要包括NULL。
+
+##### 筛选包括NULL的方法
+
+1. 加上OR条件
+
+2. IFNULL(expr1,expr2) 函数
+   如果expr1不是NULL，IFNULL()返回expr1，否则它返回expr2。IFNULL()返回一个数字或字符串值，取决于它被使用的上下文环境。
+
+看起来性能上差别不大
 
    
