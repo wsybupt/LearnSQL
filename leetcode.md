@@ -1,3 +1,6 @@
+1. 子查询性能vs联结
+2. 聚合函数性能VSORDER BY和LIMIT
+
 #### [1082. Sales Analysis I](https://leetcode-cn.com/problems/sales-analysis-i/)
 
 Table: Product
@@ -250,6 +253,37 @@ WHERE
     OR
     area > 3000000
 
+```
+
+
+
+#### [613. 直线上的最近距离](https://leetcode-cn.com/problems/shortest-distance-in-a-line/)
+
+##### MIN（407 ms, 33.50%）
+
+```mysql
+SELECT 
+    MIN(abs(P1.x - P2.x)) shortest
+FROM
+    point P1, point P2
+WHERE
+    P1.X != P2.x
+```
+
+
+
+##### ORDER BY 取代MIN（238 ms,98.52%）
+
+```mysql
+SELECT 
+    abs(P1.x - P2.x) shortest
+FROM
+    point P1, point P2
+WHERE
+    P1.X != P2.x
+ORDER BY
+    shortest
+LIMIT 1
 ```
 
 
