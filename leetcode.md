@@ -955,3 +955,134 @@ WHERE
     ifnull(B.bonus, 0) < 1000;
 ```
 
+#### [626. Exchange Seats](https://leetcode-cn.com/problems/exchange-seats/)
+
+Mary is a teacher in a middle school and she has a table seat storing students' names and their corresponding seat ids.
+
+The column id is continuous increment.
+
+
+Mary wants to change seats for the adjacent students.
+
+
+Can you write a SQL query to output the result for Mary?
+
+```mysql
++---------+---------+
+|    id   | student |
++---------+---------+
+|    1    | Abbot   |
+|    2    | Doris   |
+|    3    | Emerson |
+|    4    | Green   |
+|    5    | Jeames  |
++---------+---------+
+```
+For the sample input, the output is:
+
+
+```mysql
++---------+---------+
+|    id   | student |
++---------+---------+
+|    1    | Doris   |
+|    2    | Abbot   |
+|    3    | Green   |
+|    4    | Emerson |
+|    5    | Jeames  |
++---------+---------+
+```
+Note:
+If the number of students is odd, there is no need to change the last one's seat.
+
+##### JOIN(291 ms, 88.63%)
+
+```mysql
+SELECT
+    S1.id,
+    ifnull(S2.student, S1.student) AS student
+FROM
+    seat S1
+    LEFT JOIN
+    seat S2
+ON
+    mod(S1.id,2) = 1 AND S1.id = S2.id - 1
+    OR
+    mod(S1.id,2) = 0 AND S1.id = S2.id + 1
+ORDER BY 
+    S1.id;
+```
+
+##### UNION(336 ms, 65.20%)
+
+```mysql
+(
+  SELECT 
+    S1.id,
+    S2.student AS student
+  FROM
+    seat S1
+      LEFT JOIN
+    seat S2
+  ON
+    S1.id = S2.id + 1
+  WHERE
+    mod(S1.id, 2) = 0
+)
+UNION
+(
+  SELECT
+    S1.id,
+    ifnull(S2.student,S1.student) AS student
+  FROM
+    seat S1
+      LEFT JOIN
+    seat S2
+  ON
+    S1.id = S2.id - 1
+  WHERE
+    mod(S1.id, 2) = 1
+)
+ORDER BY
+    id
+```
+
+#####CASE WHEN(288 ms, 90.25%)
+
+```mysql
+SELECT 
+	CASE 
+		WHEN id%2=0 THEN id-1 
+		WHEN id=t2.allcount THEN id 
+		ELSE id+1 
+	END AS id,
+	student
+FROM seat,
+	(
+		SELECT 
+			COUNT(id) allcount 
+		FROM 
+			seat
+	) t2
+ORDER BY
+	id
+```
+
+##### ???问题：
+
+SELECT内不能放COUNT(*)用来作为计算，这样会只能执行一次。
+
+##### 性能分析
+
+JOIN: 一次join，条件复杂，一次查询，
+
+UNION: 两次join，
+
+CASE WHEN: 一次查询，一次JOIN
+
+| 编号 | JOIN           | UNION          | CASE WHEN      |
+| ---- | -------------- | -------------- | -------------- |
+|      | 365 ms, 53.41% | 361 ms, 54.94% | 340 ms, 63.59% |
+|      | 300 ms, 83.30% | 335 ms, 65.67% | 322 ms, 72.15% |
+|      | 265 ms, 98.51% | 277 ms, 94.72% | 274 ms, 95.91% |
+
