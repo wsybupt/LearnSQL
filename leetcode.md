@@ -1086,3 +1086,86 @@ CASE WHEN: 一次查询，一次JOIN
 |      | 300 ms, 83.30% | 335 ms, 65.67% | 322 ms, 72.15% |
 |      | 265 ms, 98.51% | 277 ms, 94.72% | 274 ms, 95.91% |
 
+
+
+#### [1068. Product Sales Analysis I](https://leetcode-cn.com/problems/product-sales-analysis-i/)
+
+Table: Sales
+```mysql
++-------------+-------+
+| Column Name | Type  |
++-------------+-------+
+| sale_id     | int   |
+| product_id  | int   |
+| year        | int   |
+| quantity    | int   |
+| price       | int   |
++-------------+-------+
+```
+(sale_id, year) is the primary key of this table.
+product_id is a foreign key to Product table.
+Note that the price is per unit.
+Table: Product
+
+```mysql
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| product_id   | int     |
+| product_name | varchar |
++--------------+---------+
+```
+product_id is the primary key of this table.
+
+
+Write an SQL query that reports all product names of the products in the Sales table along with their selling year and price.
+
+For example:
+
+Sales table:
+```mysql
++---------+------------+------+----------+-------+
+| sale_id | product_id | year | quantity | price |
++---------+------------+------+----------+-------+ 
+| 1       | 100        | 2008 | 10       | 5000  |
+| 2       | 100        | 2009 | 12       | 5000  |
+| 7       | 200        | 2011 | 15       | 9000  |
++---------+------------+------+----------+-------+
+```
+
+Product table:
+```mysql
++------------+--------------+
+| product_id | product_name |
++------------+--------------+
+| 100        | Nokia        |
+| 200        | Apple        |
+| 300        | Samsung      |
++------------+--------------+
+```
+
+Result table:
+```mysql
++--------------+-------+-------+
+| product_name | year  | price |
++--------------+-------+-------+
+| Nokia        | 2008  | 5000  |
+| Nokia        | 2009  | 5000  |
+| Apple        | 2011  | 9000  |
++--------------+-------+-------+
+```
+
+##### JOIN(2097 ms, 93.86%)
+
+```mysql
+SELECT 
+    Product.product_name,
+    Sales.year,
+    Sales.price
+FROM
+    Product
+    JOIN
+    Sales ON Product.product_id = Sales.product_id;
+```
+
+on a.c1 = b.c1 等同于 using(c1) ,前提是两个表都有相同字段c1
