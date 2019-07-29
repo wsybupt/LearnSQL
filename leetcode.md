@@ -1169,3 +1169,61 @@ FROM
 ```
 
 on a.c1 = b.c1 等同于 using(c1) ,前提是两个表都有相同字段c1
+
+
+
+#### [610. Triangle Judgement](https://leetcode-cn.com/problems/triangle-judgement/)
+
+A pupil Tim gets homework to identify whether three line segments could possibly form a triangle.
+
+
+However, this assignment is very heavy because there are hundreds of records to calculate.
+
+
+Could you help Tim by writing a query to judge whether these three sides can form a triangle, assuming table triangle holds the length of the three sides x, y and z.
+
+
+| x    | y    | z    |
+| ---- | ---- | ---- |
+| 13   | 15   | 30   |
+| 10   | 20   | 15   |
+For the sample data above, your query should return the follow result:
+| x    | y    | z    | triangle |
+| ---- | ---- | ---- | -------- |
+| 13   | 15   | 30   | No       |
+| 10   | 20   | 15   | Yes      |
+
+##### CASE WHEN(244 ms)
+
+```mysql
+SELECT 
+    x,
+    y,
+    z,
+    CASE 
+        WHEN(x + y > z
+            AND
+            y + z > x
+            AND
+            z + x > y) 
+        THEN "Yes"
+        ELSE "No"
+    END AS triangle
+FROM
+    triangle
+```
+
+
+
+##### IF函数(254 ms)
+
+```mysql
+SELECT 
+    x,
+    y,
+    z,
+    if(x+y>z && x+z>y && y+z> x, 'Yes', "No") AS triangle
+FROM
+    triangle
+```
+
