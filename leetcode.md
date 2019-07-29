@@ -1227,3 +1227,63 @@ FROM
     triangle
 ```
 
+#### [183. Customers Who Never Order](https://leetcode-cn.com/problems/customers-who-never-order/)
+
+Suppose that a website contains two tables, the Customers table and the Orders table. Write a SQL query to find all customers who never order anything.
+
+Table: Customers.
+```mysql
++----+-------+
+| Id | Name  |
++----+-------+
+| 1  | Joe   |
+| 2  | Henry |
+| 3  | Sam   |
+| 4  | Max   |
++----+-------+
+```
+Table: Orders.
+```mysql
++----+------------+
+| Id | CustomerId |
++----+------------+
+| 1  | 3          |
+| 2  | 1          |
++----+------------+
+```
+Using the above tables as example, return the following:
+```mysql
++-----------+
+| Customers |
++-----------+
+| Henry     |
+| Max       |
++-----------+
+```
+
+#####子查询(450 ms, 97.69%)
+```mysql
+SELECT
+    Name AS Customers
+FROM
+    Customers
+WHERE 
+    ID NOT IN (
+                SELECT
+                    CustomerId
+                FROM
+                    Orders)
+```
+
+#####JOIN(432 ms, 99.22%)
+```mysql
+SELECT
+    C.Name AS Customers
+FROM
+    Customers C
+    LEFT JOIN
+    Orders AS O ON C.Id = O.CustomerId
+WHERE
+    O.Id IS NULL
+```
+
