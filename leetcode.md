@@ -1406,3 +1406,54 @@ GROUP BY
 
 
 
+#### [570. Managers with at Least 5 Direct Reports](https://leetcode-cn.com/problems/managers-with-at-least-5-direct-reports/)
+
+##### JOIN之后查
+
+```mysql
+SELECT
+	M.name Name
+FROM
+	Employee E
+	LEFT JOIN
+	Employee M ON E.ManagerId = M.Id
+GROUP BY
+	E.ManagerId
+HAVING	
+	COUNT(M.name) >=5
+```
+
+##### 查到之后JOIN
+
+```mysql
+SELECT
+	name
+FROM
+	Employee E
+	INNER JOIN(
+              SELECT
+                ManagerId id
+              FROM
+                Employee
+              GROUP BY
+                ManagerId
+              HAVING
+                COUNT(Id) >= 5
+            ) M USING(id)
+```
+
+##### ???NULL和空列表的差别
+
+注意：如果用RIGHT JOIN，当括号内查到的结果在Employee表中不存在时，JOIN返回的结果是
+
+```mysql
+{"headers":["name"],"values":[[null]]}
+```
+
+用INNER JOIN, 返回的结果是
+
+```mysql
+{"headers":["Name"],"values":[]}
+```
+
+因为INNER JOIN能得到[]， OUTER JOIN一定会有内容，不满足的那些数据会为NULL
