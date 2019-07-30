@@ -1287,3 +1287,24 @@ WHERE
     O.Id IS NULL
 ```
 
+#### [612. Shortest Distance in a Plane](https://leetcode-cn.com/problems/shortest-distance-in-a-plane/)
+
+##### 数学函数sqrt(),power(),round()
+
+```mysql
+SELECT
+    round(sqrt(power((P1.x - P2.x),2) + power((P1.y - P2.y),2)),2) shortest
+FROM
+    point_2d P1,
+    point_2d P2
+WHERE 
+    NOT(
+    P1.x = P2.x
+    AND
+    P1.y = P2.y
+        )
+ORDER BY
+    shortest
+LIMIT 1
+```
+
