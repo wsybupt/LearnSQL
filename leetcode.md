@@ -1721,3 +1721,107 @@ HAVING
 
 
 
+#### [1045. Customers Who Bought All Products](https://leetcode-cn.com/problems/customers-who-bought-all-products/)
+
+Table: Customer
+```mysql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| customer_id | int     |
+| product_key | int     |
++-------------+---------+
+```
+product_key is a foreign key to Product table.
+Table: Product
+```mysql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| product_key | int     |
++-------------+---------+
+```
+product_key is the primary key column for this table.
+
+
+Write an SQL query for a report that provides the customer ids from the Customer table that bought all the products in the Product table.
+
+For example:
+
+Customer table:
+```mysql
++-------------+-------------+
+| customer_id | product_key |
++-------------+-------------+
+| 1           | 5           |
+| 2           | 6           |
+| 3           | 5           |
+| 3           | 6           |
+| 1           | 6           |
++-------------+-------------+
+```
+Product table:
+```mysql
++-------------+
+| product_key |
++-------------+
+| 5           |
+| 6           |
++-------------+
+```
+Result table:
+```mysql
++-------------+
+| customer_id |
++-------------+
+| 1           |
+| 3           |
++-------------+
+```
+The customers who bought all the products (5 and 6) are customers with id 1 and 3.
+
+##### 子查询
+
+```mysql
+SELECT
+    customer_id
+FROM
+    Customer C
+GROUP BY
+    customer_id
+HAVING
+    COUNT(DISTINCT C.product_key) = (
+                                        SELECT
+                                            COUNT(product_key) pcount
+                                        FROM
+                                            Product
+                                        )
+```
+
+ ##### JOIN 替代子查询
+
+如果子查询是用于WHERE语句, 可以直接用原始表JOIN子查询用到的表；如果子查询是用于HAVING语句，需要用GROUP BY之后的结果再JOIN子查询用到的表。
+
+```mysql
+SELECT
+    customer_id
+FROM
+    (
+        SELECT
+            customer_id,
+            COUNT(DISTINCT product_key) pcount
+        FROM
+            Customer C
+        GROUP BY
+            customer_id
+    ) T1
+    JOIN
+    (
+        SELECT
+            COUNT(product_key) pcount
+        FROM
+            Product
+    ) T2 USING(pcount)
+```
+
+注意：此处用的是JOIN， 不是LEFT JOIN 省去了一次WHERE语句。
