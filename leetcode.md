@@ -1600,3 +1600,124 @@ HAVING语句里，对C.name做聚合操作可以，直接判断就会找不到�
 ##### collect_set()
 
 mysql不支持hive的collect_set, collect_set是一个聚合操作（和group by一起用）
+
+
+
+#### [1076. Project Employees II](https://leetcode-cn.com/problems/project-employees-ii/)
+
+Table: Project
+```mysql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| project_id  | int     |
+| employee_id | int     |
++-------------+---------+
+```
+(project_id, employee_id) is the primary key of this table.
+employee_id is a foreign key to Employee table.
+Table: Employee
+
+```mysql
++------------------+---------+
+| Column Name      | Type    |
++------------------+---------+
+| employee_id      | int     |
+| name             | varchar |
+| experience_years | int     |
++------------------+---------+
+```
+employee_id is the primary key of this table.
+
+
+Write an SQL query that reports all the projects that have the most employees.
+
+The query result format is in the following example:
+
+Project table:
+```mysql
++-------------+-------------+
+| project_id  | employee_id |
++-------------+-------------+
+| 1           | 1           |
+| 1           | 2           |
+| 1           | 3           |
+| 2           | 1           |
+| 2           | 4           |
++-------------+-------------+
+```
+Employee table:
+```mysql
++-------------+--------+------------------+
+| employee_id | name   | experience_years |
++-------------+--------+------------------+
+| 1           | Khaled | 3                |
+| 2           | Ali    | 2                |
+| 3           | John   | 1                |
+| 4           | Doe    | 2                |
++-------------+--------+------------------+
+```
+Result table:
+```mysql
++-------------+
+| project_id  |
++-------------+
+| 1           |
++-------------+
+```
+The first project has 3 employees while the second one has 2.
+
+##### JOIN(743 ms, 97.59%)
+
+```mysql
+SELECT
+    project_id
+FROM
+    (
+        SELECT
+            project_id,
+            COUNT(employee_id) ecount
+        FROM
+            project
+        GROUP BY   
+            project_id
+    ) T1
+    JOIN
+    (
+        SELECT
+            COUNT(employee_id) ecount
+        FROM
+            project
+        GROUP BY
+            project_id
+        ORDER BY
+            ecount DESC
+        LIMIT 1
+    )  T2 ON T1.ecount = T2.ecount
+```
+
+##### 子查询(748 ms)
+
+```mysql
+SELECT
+    project_id
+FROM
+    project
+GROUP BY
+    project_id
+HAVING
+    COUNT(employee_id) = (
+                            SELECT
+                                COUNT(employee_id) ecount
+                            FROM
+                                project
+                            GROUP BY
+                                project_id
+                            ORDER BY
+                                ecount DESC
+                            LIMIT 1
+                        )
+```
+
+
+
