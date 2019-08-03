@@ -1457,3 +1457,146 @@ FROM
 ```
 
 因为INNER JOIN能得到[]， OUTER JOIN一定会有内容，不满足的那些数据会为NULL
+
+
+
+#### [607. Sales Person](https://leetcode-cn.com/problems/sales-person/)
+
+Description
+
+Given three tables: salesperson, company, orders.
+Output all the names in the table salesperson, who didn’t have sales to company 'RED'.
+
+Example
+Input
+
+Table: salesperson
+```mysql
++----------+------+--------+-----------------+-----------+
+| sales_id | name | salary | commission_rate | hire_date |
++----------+------+--------+-----------------+-----------+
+|   1      | John | 100000 |     6           | 4/1/2006  |
+|   2      | Amy  | 120000 |     5           | 5/1/2010  |
+|   3      | Mark | 65000  |     12          | 12/25/2008|
+|   4      | Pam  | 25000  |     25          | 1/1/2005  |
+|   5      | Alex | 50000  |     10          | 2/3/2007  |
++----------+------+--------+-----------------+-----------+
+```
+The table salesperson holds the salesperson information. Every salesperson has a sales_id and a name.
+Table: company
+```mysql
++---------+--------+------------+
+| com_id  |  name  |    city    |
++---------+--------+------------+
+|   1     |  RED   |   Boston   |
+|   2     | ORANGE |   New York |
+|   3     | YELLOW |   Boston   |
+|   4     | GREEN  |   Austin   |
++---------+--------+------------+
+```
+The table company holds the company information. Every company has a com_id and a name.
+Table: orders
+```mysql
++----------+------------+---------+----------+--------+
+| order_id | order_date | com_id  | sales_id | amount |
++----------+------------+---------+----------+--------+
+| 1        |   1/1/2014 |    3    |    4     | 100000 |
+| 2        |   2/1/2014 |    4    |    5     | 5000   |
+| 3        |   3/1/2014 |    1    |    1     | 50000  |
+| 4        |   4/1/2014 |    1    |    4     | 25000  |
++----------+----------+---------+----------+--------+
+```
+The table orders holds the sales record information, salesperson and customer company are represented by sales_id and com_id.
+output
+```mysql
++------+
+| name | 
++------+
+| Amy  | 
+| Mark | 
+| Alex |
++------+
+```
+Explanation
+
+According to order '3' and '4' in table orders, it is easy to tell only salesperson 'John' and 'Alex' have sales to company 'RED',
+so we need to output all the other names in table salesperson.
+
+##### JOIN和IS NULL
+
+```mysql
+SELECT
+    T1.name
+FROM 
+    salesperson T1
+    LEFT JOIN(
+        SELECT
+            S.name
+        FROM
+            salesperson S
+            LEFT JOIN
+            orders O ON S.sales_id = O.sales_id
+            LEFT JOIN
+            company C ON O.com_id = C.com_id
+        WHERE
+            C.name = "RED"
+        GROUP BY
+            S.name        
+        ) T2 ON T1.name = T2.name
+WHERE    
+    T2.name IS NULL
+```
+
+李启波说，HAVING只能用于聚合变量？
+
+书上说HAVING和WHRER一样，可以用WHERE的都可以用HAVING，但是HAVING作用于分组后，WHERE作用于分组前的过滤。
+
+##### 被李启波评价牛逼的做法
+
+```mysql
+SELECT
+    S.name
+FROM
+    salesperson S
+    LEFT JOIN
+    orders O ON S.sales_id = O.sales_id
+    LEFT JOIN
+    company C ON O.com_id = C.com_id
+GROUP BY
+    S.name
+HAVING
+    SUM(IF(C.name = 'RED', 1, 0))  = 0
+ORDER BY
+    S.sales_id
+```
+
+##### ????想不明白的地方
+
+```mysql
+SELECT
+    S.name
+
+FROM
+    salesperson S
+    LEFT JOIN
+    orders O ON S.sales_id = O.sales_id
+    LEFT JOIN
+    company C ON O.com_id = C.com_id
+# WHERE
+#     C.name = "RED"
+GROUP BY
+    S.name     
+HAVING
+    # SUM(S.sales_id) > 1
+    # SUM(IF(C.name = 'RED', 1, 0))  = 0
+    # ifnull(C.name,"") <>"RED" #Unknown column 'C.name' in 'having clause'
+    COUNT(C.name) > 0
+```
+
+HAVING语句里，对C.name做聚合操作可以，直接判断就会找不到。
+
+如果在SELECT语句里把C.name选中，则不会找不到，但是其实是不对的，这样SELECT出来的C.name其实是第一行的C.name。从语义上也讲不通。
+
+##### collect_set()
+
+mysql不支持hive的collect_set, collect_set是一个聚合操作（和group by一起用）
