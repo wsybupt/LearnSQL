@@ -840,66 +840,7 @@ WHERE
     
 ```
 
-#### [511. Game Play Analysis I](https://leetcode-cn.com/problems/game-play-analysis-i/)
 
-Table: Activity
-
-```mysql
-+--------------+---------+
-| Column Name  | Type    |
-+--------------+---------+
-| player_id    | int     |
-| device_id    | int     |
-| event_date   | date    |
-| games_played | int     |
-+--------------+---------+
-```
-(player_id, event_date) is the primary key of this table.
-This table shows the activity of players of some game.
-Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on some day using some device.
-
-
-Write an SQL query that reports the first login date for each player.
-
-The query result format is in the following example:
-
-Activity table:
-```mysql
-+-----------+-----------+------------+--------------+
-| player_id | device_id | event_date | games_played |
-+-----------+-----------+------------+--------------+
-| 1         | 2         | 2016-03-01 | 5            |
-| 1         | 2         | 2016-05-02 | 6            |
-| 2         | 3         | 2017-06-25 | 1            |
-| 3         | 1         | 2016-03-02 | 0            |
-| 3         | 4         | 2018-07-03 | 5            |
-+-----------+-----------+------------+--------------+
-```
-
-Result table:
-```mysql
-+-----------+-------------+
-| player_id | first_login |
-+-----------+-------------+
-| 1         | 2016-03-01  |
-| 2         | 2017-06-25  |
-| 3         | 2016-03-02  |
-+-----------+-------------+
-```
-
-##### GROUP BY(简单)
-
-```mysql
-SELECT 
-    player_id,
-    MIN(event_date) first_login
-FROM 
-    Activity
-GROUP BY 
-    player_id;
-```
-
-##### ???日期处理
 
 #### [577. Employee Bonus](https://leetcode-cn.com/problems/employee-bonus/)
 
@@ -1825,3 +1766,394 @@ FROM
 ```
 
 注意：此处用的是JOIN， 不是LEFT JOIN 省去了一次WHERE语句。
+
+
+
+#### [511. Game Play Analysis I](https://leetcode-cn.com/problems/game-play-analysis-i/)
+
+Table: Activity
+
+```mysql
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| player_id    | int     |
+| device_id    | int     |
+| event_date   | date    |
+| games_played | int     |
++--------------+---------+
+(player_id, event_date) is the primary key of this table.
+This table shows the activity of players of some game.
+Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on some day using some device.
+```
+
+Write an SQL query that reports the first login date for each player.
+
+The query result format is in the following example:
+
+Activity table:
+
+```mysql
++-----------+-----------+------------+--------------+
+| player_id | device_id | event_date | games_played |
++-----------+-----------+------------+--------------+
+| 1         | 2         | 2016-03-01 | 5            |
+| 1         | 2         | 2016-05-02 | 6            |
+| 2         | 3         | 2017-06-25 | 1            |
+| 3         | 1         | 2016-03-02 | 0            |
+| 3         | 4         | 2018-07-03 | 5            |
++-----------+-----------+------------+--------------+
+```
+
+Result table:
+
+```mysql
++-----------+-------------+
+| player_id | first_login |
++-----------+-------------+
+| 1         | 2016-03-01  |
+| 2         | 2017-06-25  |
+| 3         | 2016-03-02  |
++-----------+-------------+
+```
+
+##### GROUP BY(简单)
+
+```mysql
+SELECT 
+    player_id,
+    MIN(event_date) first_login
+FROM 
+    Activity
+GROUP BY 
+    player_id;
+```
+
+##### ???日期处理
+
+
+
+#### [512. Game Play Analysis II](https://leetcode-cn.com/problems/game-play-analysis-ii/)
+
+##### JOIN(527 ms, 95.48%)
+
+```mysql
+SELECT
+    A1.player_id,
+    A1.device_id
+FROM
+    Activity A1
+    JOIN
+    (
+        SELECT
+            player_id,
+            MIN(event_date) min_date
+        FROM
+            Activity
+        GROUP BY
+            player_id
+        
+    ) A2 ON A1.player_id = A2.player_id AND A1.event_date = A2.min_date
+```
+
+##### 简化JOIN条件(531 ms, 94.35%)
+
+```mysql
+SELECT
+    A1.player_id,
+    A1.device_id
+FROM
+    Activity A1
+    JOIN
+    (
+        SELECT
+            player_id,
+            MIN(event_date) min_date
+        FROM
+            Activity
+        GROUP BY
+            player_id
+        
+    ) A2 ON A1.player_id = A2.player_id 
+WHERE
+    A1.event_date = A2.min_date
+```
+
+##### ????哪个性能更好 会有差别吗?
+
+
+
+#### [534. Game Play Analysis III](https://leetcode-cn.com/problems/game-play-analysis-iii/)
+
+Table: Activity
+```mysql
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| player_id    | int     |
+| device_id    | int     |
+| event_date   | date    |
+| games_played | int     |
++--------------+---------+
+(player_id, event_date) is the primary key of this table.
+This table shows the activity of players of some game.
+Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on some day using some device.
+```
+
+Write an SQL query that reports for each player and date, how many games played so far by the player. That is, the total number of games played by the player until that date. Check the example for clarity.
+
+The query result format is in the following example:
+
+Activity table:
+```mysql
++-----------+-----------+------------+--------------+
+| player_id | device_id | event_date | games_played |
++-----------+-----------+------------+--------------+
+| 1         | 2         | 2016-03-01 | 5            |
+| 1         | 2         | 2016-05-02 | 6            |
+| 1         | 3         | 2017-06-25 | 1            |
+| 3         | 1         | 2016-03-02 | 0            |
+| 3         | 4         | 2018-07-03 | 5            |
++-----------+-----------+------------+--------------+
+```
+
+Result table:
+```mysql
++-----------+------------+---------------------+
+| player_id | event_date | games_played_so_far |
++-----------+------------+---------------------+
+| 1         | 2016-03-01 | 5                   |
+| 1         | 2016-05-02 | 11                  |
+| 1         | 2017-06-25 | 12                  |
+| 3         | 2016-03-02 | 0                   |
+| 3         | 2018-07-03 | 5                   |
++-----------+------------+---------------------+
+```
+For the player with id 1, 5 + 6 = 11 games played by 2016-05-02, and 5 + 6 + 1 = 12 games played by 2017-06-25.
+For the player with id 3, 0 + 5 = 5 games played by 2018-07-03.
+Note that for each player we only care about the days when the player logged in.
+
+##### 子查询(4312 ms, 5.66%)
+
+```mysql
+SELECT
+    player_id,
+    event_date,
+    (SELECT
+        SUM(A1.games_played)
+    FROM
+        Activity A1
+    WHERE
+        A1.player_id = A2.player_id
+        AND
+        A1.event_date <= A2.event_date
+    ) AS games_played_so_far
+FROM
+    activity A2
+```
+
+可能是性能真的非常差了，试了几次都是4000+ms
+
+##### 	JOIN替代子查询(1324 ms, 92.45%)
+
+```mysql
+SELECT
+    A1.player_id,
+    A1.event_date,
+    sum(A2.games_played) AS games_played_so_far
+FROM
+    Activity A1
+    JOIN
+    Activity A2
+    ON A1.player_id = A2.player_id
+WHERE
+    A2.event_date <= A1.event_date
+GROUP BY
+    A1.player_id, A1.event_date
+```
+
+试了几次都在1000+ms
+
+##### 复杂的JOIN条件替代WHERE(1452 ms, 75.47%)
+
+```mysql
+SELECT
+    A1.player_id,
+    A1.event_date,
+    sum(A2.games_played) AS games_played_so_far
+FROM
+    Activity A1
+    JOIN
+    Activity A2
+    ON A1.player_id = A2.player_id
+    AND
+    A2.event_date <= A1.event_date
+GROUP BY
+    A1.player_id, A1.event_date
+```
+
+##### 性能思考
+
+**SELECT条件复杂JOIN条件简单**优于**JOIN条件复杂SELECT条件简单**优于**子查询**
+
+##### ????窗口期
+
+##### ????sum over?
+
+#### [550. Game Play Analysis IV](https://leetcode-cn.com/problems/game-play-analysis-iv/)
+
+Table: Activity
+```mysql
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| player_id    | int     |
+| device_id    | int     |
+| event_date   | date    |
+| games_played | int     |
++--------------+---------+
+(player_id, event_date) is the primary key of this table.
+This table shows the activity of players of some game.
+Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on some day using some device.
+```
+
+Write an SQL query that reports the fraction of players that logged in again on the day after the day they first logged in, rounded to 2 decimal places. In other words, you need to count the number of players that logged in for at least two consecutive days starting from their first login date, then divide that number by the total number of players.
+
+The query result format is in the following example:
+
+Activity table:
+```mysql
++-----------+-----------+------------+--------------+
+| player_id | device_id | event_date | games_played |
++-----------+-----------+------------+--------------+
+| 1         | 2         | 2016-03-01 | 5            |
+| 1         | 2         | 2016-03-02 | 6            |
+| 2         | 3         | 2017-06-25 | 1            |
+| 3         | 1         | 2016-03-02 | 0            |
+| 3         | 4         | 2018-07-03 | 5            |
++-----------+-----------+------------+--------------+
+```
+Result table:
+```mysql
++-----------+
+| fraction  |
++-----------+
+| 0.33      |
++-----------+
+```
+Only the player with id 1 logged back in after the first day he had logged in so the answer is 1/3 = 0.33
+
+##### 5表join
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    ROUND(A4.re_count / COUNT(DISTINCT A3.player_id) ,2) AS fraction
+FROM
+    Activity A3
+    JOIN
+    (
+        SELECT 
+            COUNT( A1.player_id) re_count
+        FROM
+            Activity A1
+            JOIN
+            (
+                SELECT
+                    player_id,
+                    MIN(event_date) min_date
+                FROM
+                    Activity
+                GROUP BY
+                    player_id
+            ) A5
+            ON A1.player_id = A5.player_id AND A1.event_date = A5.min_date
+            JOIN
+            Activity A2
+            ON A1.player_id = A2.player_id 
+            AND datediff(A2.event_date, A1.event_date) = 1
+    ) A4
+    
+```
+
+##### 太难了 有没有更好的写法啊……
+
+
+
+
+
+#### [1097. Game Play Analysis V](https://leetcode-cn.com/problems/game-play-analysis-v/)
+
+Table: Activity
+```mysql
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| player_id    | int     |
+| device_id    | int     |
+| event_date   | date    |
+| games_played | int     |
++--------------+---------+
+(player_id, event_date) is the primary key of this table.
+This table shows the activity of players of some game.
+Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on some day using some device.
+```
+
+We define the install date of a player to be the first login day of that player.
+
+We also define day 1 retention of some date X to be the number of players whose install date is X and they logged back in on the day right after X, divided by the number of players whose install date is X, rounded to 2 decimal places.
+
+Write an SQL query that reports for each install date, the number of players that installed the game on that day and the day 1 retention.
+
+The query result format is in the following example:
+```mysql
+Activity table:
++-----------+-----------+------------+--------------+
+| player_id | device_id | event_date | games_played |
++-----------+-----------+------------+--------------+
+| 1         | 2         | 2016-03-01 | 5            |
+| 1         | 2         | 2016-03-02 | 6            |
+| 2         | 3         | 2017-06-25 | 1            |
+| 3         | 1         | 2016-03-01 | 0            |
+| 3         | 4         | 2016-07-03 | 5            |
++-----------+-----------+------------+--------------+
+
+Result table:
++------------+----------+----------------+
+| install_dt | installs | Day1_retention |
++------------+----------+----------------+
+| 2016-03-01 | 2        | 0.50           |
+| 2017-06-25 | 1        | 0.00           |
++------------+----------+----------------+
+Player 1 and 3 installed the game on 2016-03-01 but only player 1 logged back in on 2016-03-02 so the day 1 retention of 2016-03-01 is 1 / 2 = 0.50
+Player 2 installed the game on 2017-06-25 but didn't log back in on 2017-06-26 so the day 1 retention of 2017-06-25 is 0 / 1 = 0.00
+```
+
+##### JOIN(608 ms, 94.00%)
+
+```mysql
+SELECT
+    login_date_table.login_date install_dt,
+    COUNT(login_date_table.player_id) installs,
+    ROUND(COUNT(A2.event_date)/COUNT(login_date_table.player_id), 2) Day1_retention
+   
+FROM
+    (
+        SELECT
+            player_id,
+            min(event_date) login_date
+        FROM
+            Activity A1
+        GROUP BY
+            player_id
+    ) login_date_table
+    LEFT JOIN
+    Activity A2
+    ON 
+    login_date_table.player_id = A2.player_id
+    AND
+    datediff(A2.event_date, login_date_table.login_date) = 1 
+GROUP BY
+    login_date_table.login_date
+```
+
