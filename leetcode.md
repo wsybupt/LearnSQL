@@ -2562,3 +2562,70 @@ WHERE
         )
 ```
 
+
+
+#### [619. Biggest Single Number](https://leetcode-cn.com/problems/biggest-single-number/)
+
+Table my_numbers contains many numbers in column num including duplicated ones.
+Can you write a SQL query to find the biggest number, which only appears once.
+```mysql
++---+
+|num|
++---+
+| 8 |
+| 8 |
+| 3 |
+| 3 |
+| 1 |
+| 4 |
+| 5 |
+| 6 | 
+```
+For the sample data above, your query should return the following result:
+```mysql
++---+
+|num|
++---+
+| 6 |
+```
+Note:
+If there is no such number, just output null.
+
+##### 子查询
+
+```mysql
+SELECT 
+    MAX(num) num
+FROM
+(
+    SELECT
+        num
+    FROM
+        my_numbers
+    GROUP BY
+        num
+    HAVING
+        count(num) = 1
+) T1
+```
+
+##### JOIN 替代子查询
+
+```mysql
+SELECT 
+    MAX(T2.num) num
+FROM
+    my_numbers T1
+    LEFT JOIN
+    (
+        SELECT
+            num
+        FROM
+            my_numbers
+        GROUP BY
+            num
+        HAVING
+            count(num) = 1
+    ) T2 ON T1.num = T2.num
+```
+
