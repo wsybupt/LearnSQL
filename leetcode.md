@@ -2219,3 +2219,94 @@ ORDER BY
 ##### ?????变量做法
 
 @rownumber
+
+
+
+#### [180. Consecutive Numbers](https://leetcode-cn.com/problems/consecutive-numbers/)
+
+Write a SQL query to find all numbers that appear at least three times consecutively.
+
+```mysql
+
++----+-----+
+| Id | Num |
++----+-----+
+| 1  |  1  |
+| 2  |  1  |
+| 3  |  1  |
+| 4  |  2  |
+| 5  |  1  |
+| 6  |  2  |
+| 7  |  2  |
++----+-----+
+```
+For example, given the above Logs table, 1 is the only number that appears consecutively for at least three times.
+```mysql
++-----------------+
+| ConsecutiveNums |
++-----------------+
+| 1               |
++-----------------+
+```
+
+##### JOIN
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    DISTINCT L1.Num ConsecutiveNums
+FROM
+    Logs L1
+    JOIN
+    Logs L2
+    JOIN
+    Logs L3
+ON
+    L1.Num = L2.Num 
+    AND 
+    L2.Num = L3.Num
+    AND 
+    L1.Id = L2.Id -1 
+    AND 
+    L2.Id = L3.Id -1
+    
+```
+
+#### [197. Rising Temperature](https://leetcode-cn.com/problems/rising-temperature/)
+
+Given a Weather table, write a SQL query to find all dates' Ids with higher temperature compared to its previous (yesterday's) dates.
+```mysql
++---------+------------------+------------------+
+| Id(INT) | RecordDate(DATE) | Temperature(INT) |
++---------+------------------+------------------+
+|       1 |       2015-01-01 |               10 |
+|       2 |       2015-01-02 |               25 |
+|       3 |       2015-01-03 |               20 |
+|       4 |       2015-01-04 |               30 |
++---------+------------------+------------------+
+```
+For example, return the following Ids for the above Weather table:
+```mysql
++----+
+| Id |
++----+
+|  2 |
+|  4 |
++----+
+```
+
+##### JOIN
+
+```mysql
+SELECT
+    w1.Id
+FROM
+    Weather w1
+    LEFT JOIN
+    Weather w2
+    ON
+    datediff(w1.RecordDate, w2.RecordDate) = 1
+WHERE
+    w1.Temperature > w2.Temperature
+```
+
