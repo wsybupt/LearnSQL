@@ -2157,3 +2157,65 @@ GROUP BY
     login_date_table.login_date
 ```
 
+
+
+#### [178. Rank Scores](https://leetcode-cn.com/problems/rank-scores/)
+
+Write a SQL query to rank scores. If there is a tie between two scores, both should have the same ranking. Note that after a tie, the next ranking number should be the next consecutive integer value. In other words, there should be no "holes" between ranks.
+```mysql
++----+-------+
+| Id | Score |
++----+-------+
+| 1  | 3.50  |
+| 2  | 3.65  |
+| 3  | 4.00  |
+| 4  | 3.85  |
+| 5  | 4.00  |
+| 6  | 3.65  |
++----+-------+
+```
+For example, given the above Scores table, your query should generate the following report (order by highest score):
+```mysql
++-------+------+
+| Score | Rank |
++-------+------+
+| 4.00  | 1    |
+| 4.00  | 1    |
+| 3.85  | 2    |
+| 3.65  | 3    |
+| 3.65  | 3    |
+| 3.50  | 4    |
++-------+------+
+```
+
+##### 理解Rank的含义
+
+排名 = 排在你前面的人数(包括你自己），又可以根据排名总数和人数是否相等分为以下两种方式。
+
+分数排名：有多少**分数**比你的分数高（两个并列第一之后是第二）
+
+名词排名：有多少**人**比你的分数高（两个并列第一之后是第三）
+
+根据题目和例子，可以发现是对**分数**进行排名，即算出有多少个不同的分数排在你前面。
+
+##### 做法（818 ms, 63.26%）
+
+```mysql
+SELECT
+    S1.Score,
+    Count(DISTINCT S2.Score)  Rank
+FROM   
+    Scores S1
+    LEFT JOIN
+    Scores S2
+    ON S1.Score <= S2.Score
+GROUP BY 
+    S1.Id
+ORDER BY 
+    S1.Score DESC
+
+```
+
+##### ?????变量做法
+
+@rownumber
