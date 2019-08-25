@@ -2717,3 +2717,151 @@ SELECT
       2) AS 'Cancellation Rate'
 ```
 
+
+
+#### [601. Human Traffic of Stadium](https://leetcode-cn.com/problems/human-traffic-of-stadium/)
+
+X city built a new stadium, each day many people visit it and the stats are saved as these columns: id, visit_date, people
+
+Please write a query to display the records which have 3 or more consecutive rows and the amount of people more than 100(inclusive).
+
+For example, the table stadium:
+```sql
++------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 1    | 2017-01-01 | 10        |
+| 2    | 2017-01-02 | 109       |
+| 3    | 2017-01-03 | 150       |
+| 4    | 2017-01-04 | 99        |
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-08 | 188       |
++------+------------+-----------+
+```
+For the sample data above, the output is:
+```sql
++------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-08 | 188       |
++------+------------+-----------+
+```
+
+##### 注意此题有坑
+
+测试用例里有一个日期不连续的，但是id连续，也算进去了。
+
+##### 五表JOIN
+
+分别查出处于连续3个中的第一个，第二个，第三个，再distinct一下。
+
+```mysql
+# # Write your MySQL query statement below
+# SELECT
+#     DISTINCT S3.id,
+#     S3.visit_date,
+#     S3.people
+# FROM
+#     stadium S3
+#     LEFT JOIN
+#     stadium S2
+#     ON DATEDIFF(S3.visit_date, S2.visit_date) = 1
+#     LEFT JOIN
+#     stadium S1
+#     ON DATEDIFF(S2.visit_date, S1.visit_date) = 1
+#     LEFT JOIN
+#     stadium S4
+#     ON DATEDIFF(S4.visit_date, S3.visit_date) = 1
+#     LEFT JOIN
+#     stadium S5
+#     ON DATEDIFF(S5.visit_date, S4.visit_date) = 1
+# WHERE
+#     (S1.visit_date IS NOT NULL AND S1.people >= 100
+#     AND
+#     S2.visit_date IS NOT NULL AND S2.people >= 100
+#     AND
+#     S3.visit_date IS NOT NULL AND S3.people >= 100)
+#     OR
+#     (S4.visit_date IS NOT NULL AND S4.people >= 100
+#     AND
+#     S5.visit_date IS NOT NULL AND S5.people >= 100
+#     AND
+#     S3.visit_date IS NOT NULL AND S3.people >= 100)
+#     OR
+#     (S4.visit_date IS NOT NULL AND S4.people >= 100
+#     AND
+#     S2.visit_date IS NOT NULL AND S2.people >= 100
+#     AND
+#     S3.visit_date IS NOT NULL AND S3.people >= 100)
+   
+
+# Write your MySQL query statement below
+SELECT
+    DISTINCT S3.id,
+    S3.visit_date,
+    S3.people
+FROM
+    stadium S3
+    LEFT JOIN
+    stadium S2
+    ON S3.ID-S2.ID = 1
+    LEFT JOIN
+    stadium S1
+    ON S2.ID -S1.ID = 1
+    LEFT JOIN
+    stadium S4
+    ON S4.ID - S3.ID = 1
+    LEFT JOIN
+    stadium S5
+    ON S5.ID - S4.ID = 1
+WHERE
+    (S1.visit_date IS NOT NULL AND S1.people >= 100
+    AND
+    S2.visit_date IS NOT NULL AND S2.people >= 100
+    AND
+    S3.visit_date IS NOT NULL AND S3.people >= 100)
+    OR
+    (S4.visit_date IS NOT NULL AND S4.people >= 100
+    AND
+    S5.visit_date IS NOT NULL AND S5.people >= 100
+    AND
+    S3.visit_date IS NOT NULL AND S3.people >= 100)
+    OR
+    (S4.visit_date IS NOT NULL AND S4.people >= 100
+    AND
+    S2.visit_date IS NOT NULL AND S2.people >= 100
+    AND
+    S3.visit_date IS NOT NULL AND S3.people >= 100)
+    
+
+
+```
+
+……五表JOIN 也太蠢了吧
+
+##### 三表JOIN
+
+```mysql
+SELECT
+    DISTINCT S1.id, S1.visit_date,S1.people
+FROM
+    stadium S1, stadium S2, stadium S3
+WHERE
+    (
+        S3.id - S2.id = 1 AND S2.id - S1.id = 1
+        OR
+    S2.id - S1.id = 1 AND S1.id - S3.id = 1
+    OR
+    S1.id - S3.id = 1 AND S3.id - S2.id = 1)
+    AND S1.people >= 100 AND S2.people >= 100 AND S3.people >= 100
+ORDER BY
+    S1.id
+
+```
+
+本来以为5个表才能包括【前】中后，前【中】后，前中【后】，其实3个就够了……
