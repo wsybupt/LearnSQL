@@ -4,17 +4,13 @@
 
 
 
-| 题目                                                         | 难度 | 考点 |
-| ------------------------------------------------------------ | ---- | ---- |
-| <a href="####[175. Combine Two Tables](https://leetcode-cn.com/problems/combine-two-tables/)">175. Combine Two Tables</a> | 简单 |      |
+| 题目                                                         | 难度 | 类别  |
+| ------------------------------------------------------------ | ---- | ----- |
+| <a href="####[175. Combine Two Tables](https://leetcode-cn.com/problems/combine-two-tables/)">175. Combine Two Tables</a> | 简单 | QUERY |
 
 
 
 
-
-
-
-### 查询类
 
 #### [175. Combine Two Tables](https://leetcode-cn.com/problems/combine-two-tables/)
 
@@ -69,6 +65,148 @@ FROM
 > 1、on条件是在生成临时表时使用的条件，它不管on中的条件是否为真，都会返回左边表中的记录。
 >
 > 2、where条件是在临时表生成好后，再对临时表进行过滤的条件。这时已经没有left join的含义（必须返回左边表的记录）了，条件不为真的就全部过滤掉。
+
+
+
+#### [176. Second Highest Salary](https://leetcode-cn.com/problems/second-highest-salary/)
+
+Write a SQL query to get the second highest salary from the Employee table.
+```sql
++----+--------+
+| Id | Salary |
++----+--------+
+| 1  | 100    |
+| 2  | 200    |
+| 3  | 300    |
++----+--------+
+```
+For example, given the above Employee table, the query should return 200 as the second highest salary. If there is no second highest salary, then the query should return null.
+```sql
++---------------------+
+| SecondHighestSalary |
++---------------------+
+| 200                 |
++---------------------+
+```
+
+##### 分页做法和问题
+
+```mysql
+SELECT
+    Salary SecondHighestSalary
+FROM
+    Employee
+GROUP BY
+    Salary
+ORDER BY
+    SecondHighestSalary DESC
+LIMIT 1,1
+```
+
+错误：
+
+输入:
+
+```
+{"headers": {"Employee": ["Id", "Salary"]}, "rows": {"Employee": [[1, 100]]}}
+```
+
+输出
+
+```
+{"headers":["SecondHighestSalary"],"values":[]}
+```
+
+预期结果
+
+```
+{"headers":["SecondHighestSalary"],"values":[[null]]}
+```
+
+##### 分页做法的解决方法(利用子查询)
+
+```mysql
+SELECT
+(
+    SELECT
+        Salary
+    FROM
+        Employee
+    GROUP BY
+        Salary
+    ORDER BY
+        Salary DESC
+    LIMIT 1,1
+)
+AS SecondHighestSalary
+```
+
+#####先去掉第一 得到第二
+
+```mysql
+SELECT
+    Max(Salary) SecondHighestSalary
+FROM
+    Employee
+WHERE
+    Salary <> (
+                SELECT
+                    MAX(Salary)
+                FROM
+                    Employee)
+```
+
+
+
+#### [177. Nth Highest Salary](https://leetcode-cn.com/problems/nth-highest-salary/)
+
+Write a SQL query to get the nth highest salary from the Employee table.
+```sql
++----+--------+
+| Id | Salary |
++----+--------+
+| 1  | 100    |
+| 2  | 200    |
+| 3  | 300    |
++----+--------+
+```
+For example, given the above Employee table, the nth highest salary where n = 2 is 200. If there is no nth highest salary, then the query should return null.
+```sql
++------------------------+
+| getNthHighestSalary(2) |
++------------------------+
+| 200                    |
++------------------------+
+```
+
+##### 学习一下函数定义的方法
+
+```mysql
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  DECLARE P INT;
+  SET P = N-1;
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT
+        (
+            SELECT
+                Salary
+            FROM
+                Employee
+            GROUP BY
+                Salary
+            ORDER BY
+                Salary DESC
+            LIMIT P,1
+        )
+        AS SecondHighestSalary
+  );
+END
+```
+
+
+
 
 
 
@@ -359,6 +497,75 @@ FROM
 WHERE
     O.Id IS NULL
 ```
+
+
+
+#### [184. Department Highest Salary](https://leetcode-cn.com/problems/department-highest-salary/)
+
+The Employee table holds all employees. Every employee has an Id, a salary, and there is also a column for the department Id.
+```sql
++----+-------+--------+--------------+
+| Id | Name  | Salary | DepartmentId |
++----+-------+--------+--------------+
+| 1  | Joe   | 70000  | 1            |
+| 2  | Jim   | 90000  | 1            |
+| 3  | Henry | 80000  | 2            |
+| 4  | Sam   | 60000  | 2            |
+| 5  | Max   | 90000  | 1            |
++----+-------+--------+--------------+
+```
+The Department table holds all departments of the company.
+```sql
++----+----------+
+| Id | Name     |
++----+----------+
+| 1  | IT       |
+| 2  | Sales    |
++----+----------+
+```
+Write a SQL query to find employees who have the highest salary in each of the departments. For the above tables, your SQL query should return the following rows (order of rows does not matter).
+```sql
++------------+----------+--------+
+| Department | Employee | Salary |
++------------+----------+--------+
+| IT         | Max      | 90000  |
+| IT         | Jim      | 90000  |
+| Sales      | Henry    | 80000  |
++------------+----------+--------+
+```
+Explanation:
+
+Max and Jim both have the highest salary in the IT department and Henry has the highest salary in the Sales department.
+
+##### 简单(528 ms, 99.12%)
+
+```mysql
+SELECT
+    D.Name AS Department,
+    E.Name AS Employee,
+    E.Salary
+FROM
+    Employee E
+    RIGHT JOIN
+    Department D
+    ON E.DepartmentId = D.Id
+WHERE
+    (E.Salary,E.DepartmentId) IN
+    (
+        SELECT
+            MAX(Salary),
+            DepartmentId
+        FROM
+            Employee
+        GROUP BY
+            DepartmentId
+
+    )
+ORDER BY
+    E.ID
+```
+
+
 
 
 
@@ -877,6 +1084,77 @@ FROM
 
 
 
+#### [574. Winning Candidate](https://leetcode-cn.com/problems/winning-candidate/)
+
+Table: Candidate
+```sql
++-----+---------+
+| id  | Name    |
++-----+---------+
+| 1   | A       |
+| 2   | B       |
+| 3   | C       |
+| 4   | D       |
+| 5   | E       |
++-----+---------+  
+```
+Table: Vote
+```sql
++-----+--------------+
+| id  | CandidateId  |
++-----+--------------+
+| 1   |     2        |
+| 2   |     4        |
+| 3   |     3        |
+| 4   |     2        |
+| 5   |     5        |
++-----+--------------+
+```
+id is the auto-increment primary key,
+CandidateId is the id appeared in Candidate table.
+Write a sql to find the name of the winning candidate, the above example will return the winner B.
+```sql
++------+
+| Name |
++------+
+| B    |
++------+
+```
+Notes:
+
+You may assume there is no tie, in other words there will be at most one winning candidate.
+
+##### 做法
+
+```mysql
+SELECT
+    Name
+FROM
+    Candidate
+WHERE
+    id = (
+        SELECT
+            CandidateId
+        FROM
+            Vote
+        GROUP BY 
+            CandidateId
+        ORDER BY
+            COUNT(id) DESC
+        LIMIT 2
+    )
+```
+
+
+
+如果对子查询用IN就会报错
+
+```
+This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
+```
+
+好在这题确定了就一个，所以可以换成等号，要不然要嵌套一层查询。
+
 
 
 #### [577. Employee Bonus](https://leetcode-cn.com/problems/employee-bonus/)
@@ -1257,6 +1535,158 @@ WHERE
     OR
     area > 3000000
 
+```
+
+
+
+#### [596. Classes More Than 5 Students](https://leetcode-cn.com/problems/classes-more-than-5-students/)
+
+There is a table courses with columns: student and class
+
+Please list out all classes which have more than or equal to 5 students.
+
+For example, the table:
+```sql
++---------+------------+
+| student | class      |
++---------+------------+
+| A       | Math       |
+| B       | English    |
+| C       | Math       |
+| D       | Biology    |
+| E       | Math       |
+| F       | Computer   |
+| G       | Math       |
+| H       | Math       |
+| I       | Math       |
++---------+------------+
+```
+Should output:
+```sql
++---------+
+| class   |
++---------+
+| Math    |
++---------+
+```
+
+Note:
+The students should not be counted duplicate in each course.
+
+##### 简单
+
+```mysql
+SELECT
+    class
+FROM
+    courses
+GROUP BY
+    class
+HAVING 
+    count(DISTINCT student) >= 5
+```
+
+
+
+####[597. Friend Requests I: Overall Acceptance Rate](https://leetcode-cn.com/problems/friend-requests-i-overall-acceptance-rate/)
+
+In social network like Facebook or Twitter, people send friend requests and accept others’ requests as well. Now given two tables as below:
+
+
+Table: friend_request
+| sender_id | send_to_id | request_date |
+| --------- | ---------- | ------------ |
+| 1         | 2          | 2016_06-01   |
+| 1         | 3          | 2016_06-01   |
+| 1         | 4          | 2016_06-01   |
+| 2         | 3          | 2016_06-02   |
+| 3         | 4          | 2016-06-09   |
+
+
+Table: request_accepted
+| requester_id | accepter_id | accept_date |
+| ------------ | ----------- | ----------- |
+| 1            | 2           | 2016_06-03  |
+| 1            | 3           | 2016-06-08  |
+| 2            | 3           | 2016-06-08  |
+| 3            | 4           | 2016-06-09  |
+| 3            | 4           | 2016-06-10  |
+
+
+Write a query to find the overall acceptance rate of requests rounded to 2 decimals, which is the number of acceptance divide the number of requests.
+
+
+For the sample data above, your query should return the following result.
+
+
+| accept_rate |
+| ----------- |
+| 0.80        |
+
+
+Note:
+The accepted requests are not necessarily from the table friend_request. In this case, you just need to simply count the total accepted requests (no matter whether they are in the original requests), and divide it by the number of requests to get the acceptance rate.
+It is possible that a sender sends multiple requests to the same receiver, and a request could be accepted more than once. In this case, the ‘duplicated’ requests or acceptances are only counted once.
+If there is no requests at all, you should return 0.00 as the accept_rate.
+
+
+Explanation: There are 4 unique accepted requests, and there are 5 requests in total. So the rate is 0.80.
+
+
+Follow-up:
+Can you write a query to return the accept rate but for every month?
+How about the cumulative accept rate for every day?
+
+##### 毫无尊严的做法
+
+```mysql
+SELECT
+IFNULL(ROUND((
+    SELECT
+        COUNT(*)
+    FROM
+    (
+        SELECT
+            COUNT(*)
+        FROM
+            request_accepted
+        GROUP BY
+            requester_id,
+            accepter_id
+    ) AS R
+) /
+(
+    SELECT
+        COUNT(*)
+    FROM
+    (
+        SELECT
+            COUNT(*)
+        FROM
+            friend_request
+        GROUP BY
+            sender_id,send_to_id
+    ) AS A
+        
+),2),0.0) AS accept_rate
+
+```
+
+不过大家差不多都是这种思路，只是我的排版看起来不太清晰。
+
+#####GROUP BY用的没必要了, DISTINCT会作用于所有的列。
+
+##### 没那么蠢的做法
+
+```mysql
+SELECT
+    IFNULL(
+        ROUND(
+            (SELECT COUNT(DISTINCT requester_id, accepter_id) FROM request_accepted )/
+            (SELECT COUNT(DISTINCT sender_id,send_to_id) FROM friend_request),
+            2),
+        0.0
+    ) AS accept_rate
 ```
 
 
@@ -2484,6 +2914,90 @@ group by product_id )
 
 
 
+#### [1075. Project Employees I](https://leetcode-cn.com/problems/project-employees-i/)
+
+Table: Project
+```sql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| project_id  | int     |
+| employee_id | int     |
++-------------+---------+
+(project_id, employee_id) is the primary key of this table.
+employee_id is a foreign key to Employee table.
+```
+Table: Employee
+```sql
++------------------+---------+
+| Column Name      | Type    |
++------------------+---------+
+| employee_id      | int     |
+| name             | varchar |
+| experience_years | int     |
++------------------+---------+
+employee_id is the primary key of this table.
+```
+
+Write an SQL query that reports the average experience years of all the employees for each project, rounded to 2 digits.
+
+The query result format is in the following example:
+
+Project table:
+```sql
++-------------+-------------+
+| project_id  | employee_id |
++-------------+-------------+
+| 1           | 1           |
+| 1           | 2           |
+| 1           | 3           |
+| 2           | 1           |
+| 2           | 4           |
++-------------+-------------+
+```
+Employee table:
+```sql
++-------------+--------+------------------+
+| employee_id | name   | experience_years |
++-------------+--------+------------------+
+| 1           | Khaled | 3                |
+| 2           | Ali    | 2                |
+| 3           | John   | 1                |
+| 4           | Doe    | 2                |
++-------------+--------+------------------+
+```
+Result table:
+```sql
++-------------+---------------+
+| project_id  | average_years |
++-------------+---------------+
+| 1           | 2.00          |
+| 2           | 2.50          |
++-------------+---------------+
+```
+The average experience years for the first project is (3 + 2 + 1) / 3 = 2.00 and for the second project is (3 + 2) / 2 = 2.50
+
+##### 简单
+
+```mysql
+SELECT
+    P.project_id,
+    ROUND(AVG(E.experience_years),2) average_years
+FROM
+    Project P
+    LEFT JOIN
+    Employee E
+    ON P.employee_id = E.employee_id
+GROUP BY
+    P.project_id
+    
+```
+
+##### 不要忘了保留几位
+
+
+
+
 #### [1076. Project Employees II](https://leetcode-cn.com/problems/project-employees-ii/)
 
 Table: Project
@@ -2501,7 +3015,7 @@ Table: Project
 employee_id is a foreign key to Employee table.
 Table: Employee
 
-```mysql
+​```mysql
 +------------------+---------+
 | Column Name      | Type    |
 +------------------+---------+
@@ -3006,11 +3520,95 @@ HAVING
 
 
 
+#### [1084. Sales Analysis III](https://leetcode-cn.com/problems/sales-analysis-iii/)
+
+Table: Product
+
+```sql
++--------------+---------+
+| Column Name  | Type    |
++--------------+---------+
+| product_id   | int     |
+| product_name | varchar |
+| unit_price   | int     |
++--------------+---------+
+```
+product_id is the primary key of this table.
+Table: Sales
+```sql
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| seller_id   | int     |
+| product_id  | int     |
+| buyer_id    | int     |
+| sale_date   | date    |
+| quantity    | int     |
+| price       | int     |
++------ ------+---------+
+```
+This table has no primary key, it can have repeated rows.
+product_id is a foreign key to Product table.
 
 
+Write an SQL query that reports the products that were only sold in spring 2019. That is, between 2019-01-01 and 2019-03-31 inclusive.
 
+The query result format is in the following example:
 
+Product table:
+```sql
++------------+--------------+------------+
+| product_id | product_name | unit_price |
++------------+--------------+------------+
+| 1          | S8           | 1000       |
+| 2          | G4           | 800        |
+| 3          | iPhone       | 1400       |
++------------+--------------+------------+
+```
+Sales table:
+```sql
++-----------+------------+----------+------------+----------+-------+
+| seller_id | product_id | buyer_id | sale_date  | quantity | price |
++-----------+------------+----------+------------+----------+-------+
+| 1         | 1          | 1        | 2019-01-21 | 2        | 2000  |
+| 1         | 2          | 2        | 2019-02-17 | 1        | 800   |
+| 2         | 2          | 3        | 2019-06-02 | 1        | 800   |
+| 3         | 3          | 4        | 2019-05-13 | 2        | 2800  |
++-----------+------------+----------+------------+----------+-------+
+```
+Result table:
+```sql
++-------------+--------------+
+| product_id  | product_name |
++-------------+--------------+
+| 1           | S8           |
++-------------+--------------+
+```
+The product with id 1 was only sold in spring 2019 while the other two were sold after.
 
+##### 做法
+
+```mysql
+SELECT
+    DISTINCT S.product_id,
+    P.product_name
+FROM
+    Sales S
+    LEFT JOIN
+    Product P
+    ON
+    S.product_id = P.product_id
+WHERE
+    S.product_id NOT IN
+                (
+                    SELECT
+                        product_id
+                    FROM
+                        Sales
+                    WHERE
+                        sale_date NOT BETWEEN '2019-01-01' AND '2019-03-31'   
+                )
+```
 
 
 
