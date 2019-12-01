@@ -8,15 +8,32 @@ _SQL必知必会
 
 [runoob提供的sqlite教程](http://www.runoob.com/sqlite/sqlite-tutorial.html)
 
+### 打开书中的例子的方法
+
+```shell
+sqlite3 tysql.sqlite
+```
+
 ### 常用命令
 
  .help
 
-.show
-
-配置输出样式
+.show 配置输出样式
 
 .schema 显示create语句
+
+### 格式化输出
+
+您可以使用下列的点命令来格式化输出
+
+```
+sqlite>.header on
+sqlite>.mode column
+sqlite>.timer on
+sqlite>
+```
+
+更多mode样式参考[文章](https://blog.csdn.net/dingshao1114/article/details/70049025)
 
 ### sqlite_master 表格
 
@@ -256,7 +273,7 @@ SQL structured query language
 
 
 
-# 第2课 检索数据
+# 第2课 检索数据p9
 
 \* 通配符
 
@@ -384,6 +401,14 @@ SQRT()
 
 ## 9.1 聚集函数aggregate function
 
+| 函数    | 单个列 | *    | 计算项目 | 忽略NULL          | DISTINCT       |
+| ------- | ------ | ---- | -------- | ----------------- | -------------- |
+| AVG()   | √      |      | √        | 是                | 可以           |
+| COUNT() | √      | √    | √        | 是；当使用*时：否 | 不可用于*      |
+| MAX()   | √      |      | √        | 是                | 可以，但没意义 |
+| MIN()   | √      |      | √        | 是                | 可以，但没意义 |
+| SUM()   | √      |      | √        | 是                |                |
+
 ### 9.1.1 AVG()
 
 只能用于单个列
@@ -421,6 +446,8 @@ ALL默认
 DISTINCT
 
 ## 9.3 组合聚集函数
+
+
 
 
 
@@ -725,7 +752,7 @@ UPDATE
 
 DELETE
 
-TRUNCATE
+TRUNCATE 删除所有行，更快，不记录变动
 
 
 
