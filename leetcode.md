@@ -2,13 +2,46 @@
 
 2. 聚合函数性能VSORDER BY和LIMIT
 
+3. union和or的性能问题
+
+   [union并不绝对比or的执行效率高](https://blog.csdn.net/weixin_42434300/article/details/81164383)
+   
+   [mysql 实战 or、in与union all 的查询效率](https://www.cnblogs.com/maohuidong/p/10478356.html)
+   
+   所以到底哪个快，好像有争议？
+
+#### 题目汇总-删改类
+
+| 题目                         | 难度 | 类别   | 日期       |
+| ---------------------------- | ---- | ------ | ---------- |
+| 196. Delete Duplicate Emails | 简单 | 删除   | 2019-11-29 |
+| 627.交换工资                 | 简单 | UPDATE | 2019-11-29 |
 
 
-| 题目                                                         | 难度 | 类别  |
-| ------------------------------------------------------------ | ---- | ----- |
-| <a href="####[175. Combine Two Tables](https://leetcode-cn.com/problems/combine-two-tables/)">175. Combine Two Tables</a> | 简单 | QUERY |
 
+#### 题目汇总-查询类
 
+| 题目                          | 难度 | 类别                               | 第二轮     |
+| ----------------------------- | ---- | ---------------------------------- | ---------- |
+| 175. 组合两个表               | 简单 | JOIN                               | 2019-11-22 |
+| 182. 查找重复的电子邮箱       | 简单 | GROUP BY                           | 2019-11-21 |
+|                               |      | 窗口函数                           |            |
+| 595. 大的国家                 | 简单 | QUERY                              | 2019-11-21 |
+|                               |      | UNION 代替 OR                      | 2019-11-26 |
+| 620. 有趣的电影               | 简单 | QUERY                              | 2019-11-22 |
+| 183. 从不订购的客户           | 简单 | JOIN, 子查询                       | 2019-11-22 |
+| 1179.重新格式化部门表         | 简单 | if或case when，group               | 2019-11-28 |
+| 197. 上升的温度               | 简单 | join，datadiff函数                 | 2019-11-25 |
+| 596. 超过5名学生的课          | 简单 | GROUPBY HAVING                     | 2019-11-25 |
+| 176. 第二高的薪水             | 简单 | 看起来是简单查询，容易出错         | 2019-11-26 |
+| 626. 换座位                   | 中等 | 三种做法都试试                     |            |
+| 178. 分数排名                 | 中等 | 理解排名的含义，不难               | 2019-11-27 |
+| 180. 连续出现的数字           | 中等 | JOIN(2表）                         | 2019-11-27 |
+| 177. 第N高的薪水              | 中等 | 函数的定义，剩下的跟之前一道题一样 | 2019-11-27 |
+| 181. 超过经理收入的员工       | 简单 | 简单JOIN                           | 2019-11-28 |
+| 184. 部门工资最高的员工       | 中等 |                                    | 2019-11-29 |
+| 185. 部门工资前三高的所有员工 | 困难 | 子查询                             | 2019-11-29 |
+| 262. 行程和用户               | 困难 | 理解要算的比例是什么，在哪里筛选   | 2019-12-01 |
 
 
 
@@ -306,7 +339,7 @@ For example, given the above Logs table, 1 is the only number that appears conse
 +-----------------+
 ```
 
-##### JOIN
+##### JOIN(三表)
 
 ```mysql
 # Write your MySQL query statement below
@@ -327,6 +360,30 @@ ON
     AND 
     L2.Id = L3.Id -1
     
+```
+
+##### JOIN(二表)
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    DISTINCT l1.Num ConsecutiveNums
+FROM
+    Logs L1
+    LEFT JOIN
+    Logs L2
+ON
+    L1.Num = L2.Num
+    AND
+    (
+    L2.id = L1.id + 1
+    OR 
+    L2.id = L1.id - 1
+    )
+GROUP BY
+    L1.id
+HAVING 
+    COUNT(L2.id) >= 2
 ```
 
 
@@ -537,7 +594,7 @@ Explanation:
 
 Max and Jim both have the highest salary in the IT department and Henry has the highest salary in the Sales department.
 
-##### 简单(528 ms, 99.12%)
+##### 子查询(528 ms, 99.12%)
 
 ```mysql
 SELECT
@@ -565,9 +622,157 @@ ORDER BY
     E.ID
 ```
 
+##### 	JOIN 无子查询
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    D.Name Department,
+    E1.Name Employee,
+    E1.Salary
+FROM
+    Employee E1
+    JOIN
+    (
+        SELECT
+            MAX(Salary) Salary,
+            DepartmentId 
+        FROM
+            Employee
+        GROUP BY
+            DepartmentId
+    ) E2
+    JOIN Department D
+    ON 
+    E1.Salary = E2.Salary 
+    AND
+    E1.DepartmentId = E2.DepartmentId
+    AND E1.DepartmentId = D.Id
+```
 
 
 
+#### [185. Department Top Three Salaries](https://leetcode-cn.com/problems/department-top-three-salaries/)
+
+The Employee table holds all employees. Every employee has an Id, and there is also a column for the department Id.
+```mysql
++----+-------+--------+--------------+
+| Id | Name  | Salary | DepartmentId |
++----+-------+--------+--------------+
+| 1  | Joe   | 85000  | 1            |
+| 2  | Henry | 80000  | 2            |
+| 3  | Sam   | 60000  | 2            |
+| 4  | Max   | 90000  | 1            |
+| 5  | Janet | 69000  | 1            |
+| 6  | Randy | 85000  | 1            |
+| 7  | Will  | 70000  | 1            |
++----+-------+--------+--------------+
+```
+The Department table holds all departments of the company.
+```mysql
++----+----------+
+| Id | Name     |
++----+----------+
+| 1  | IT       |
+| 2  | Sales    |
++----+----------+
+```
+Write a SQL query to find employees who earn the top three salaries in each of the department. For the above tables, your SQL query should return the following rows (order of rows does not matter).
+```mysql
++------------+----------+--------+
+| Department | Employee | Salary |
++------------+----------+--------+
+| IT         | Max      | 90000  |
+| IT         | Randy    | 85000  |
+| IT         | Joe      | 85000  |
+| IT         | Will     | 70000  |
+| Sales      | Henry    | 80000  |
+| Sales      | Sam      | 60000  |
++------------+----------+--------+
+```
+Explanation:
+
+In IT department, Max earns the highest salary, both Randy and Joe earn the second highest salary, and Will earns the third highest salary. There are only two employees in the Sales department, Henry earns the highest salary while Sam earns the second highest salary.
+
+##### 前三名怎么做
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    D.Name Department,
+    E1.Name Employee,
+    E1.Salary Salary
+FROM
+    Employee E1 
+    JOIN
+    Department D
+    ON E1.DepartmentId =D.Id
+WHERE
+    (
+        SELECT
+            COUNT(DISTINCT E2.Salary)
+        FROM
+            Employee E2
+        WHERE
+            E2.DepartmentId = E1.DepartmentId
+            AND
+            E2.Salary > E1.Salary) < 3
+ORDER BY
+    Department,
+    Salary DESC
+
+```
+
+
+
+
+
+#### [196. Delete Duplicate Emails](https://leetcode-cn.com/problems/delete-duplicate-emails/)
+
+Write a SQL query to delete all duplicate email entries in a table named Person, keeping only unique emails based on its smallest Id.
+
++----+------------------+
+| Id | Email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
+| 3  | john@example.com |
++----+------------------+
+Id is the primary key column for this table.
+For example, after running your query, the above Person table should have the following rows:
+
++----+------------------+
+| Id | Email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
++----+------------------+
+Note:
+
+Your output is the whole Person table after executing your sql. Use delete statement.
+
+##### delete和mysql的注意事项
+
+```mysql
+# Write your MySQL query statement below
+DELETE FROM Person
+WHERE Id NOT IN(
+    SELECT id FROM (
+        SELECT
+            MIN(P.Id) id
+        FROM
+            Person P
+        GROUP BY
+            P.Email
+        ) P
+    )
+```
+
+##### 注意:
+
+不嵌套一层SELECT的话，执行这条语句时会报错：You can't specify target table 'Person' for update in FROM clause
+
+这是因为MySQL不允许同时查询和删除一张表，我们可以通过子查询的方式包装一下即可避免这个报错
 
 
 
@@ -704,6 +909,28 @@ SELECT
     ROUND(
       SUM(Status LIKE 'cancelled_by_%') / COUNT(*),
       2) AS 'Cancellation Rate'
+```
+
+##### 2019-11-29想出了更蠢的做法
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    T.Request_at Day,
+    ROUND(
+    SUM(T.Status LIKE 'cancelled_by_%' AND C.Banned = 'No' AND D.Banned = 'No')/
+    SUM(C.Banned = 'No' AND D.Banned = 'No'),2) 'Cancellation Rate'
+FROM
+    Trips T
+    LEFT JOIN
+    Users C ON T.Client_Id = C.Users_Id 
+    LEFT JOIN
+    USERS D ON T.Driver_Id = D.Users_Id
+WHERE
+    T.Request_at BETWEEN '2013-10-01' AND '2013-10-03'
+GROUP BY
+    T.Request_at
+
 ```
 
 
@@ -1537,7 +1764,15 @@ WHERE
 
 ```
 
+##### UNION 代替 OR
 
+```mysql
+select name,population,area from World
+where area > 3000000
+union
+select name,population,area from World
+where population > 25000000;
+```
 
 #### [596. Classes More Than 5 Students](https://leetcode-cn.com/problems/classes-more-than-5-students/)
 
@@ -1573,7 +1808,7 @@ Should output:
 Note:
 The students should not be counted duplicate in each course.
 
-##### 简单
+##### GROUP用HAVING筛选
 
 ```mysql
 SELECT
@@ -1987,6 +2222,29 @@ Explanation
 
 According to order '3' and '4' in table orders, it is easy to tell only salesperson 'John' and 'Alex' have sales to company 'RED',
 so we need to output all the other names in table salesperson.
+
+##### 这做法不行吗？2019-11-27
+
+```mysql
+SELECT
+	name
+FROM
+	salesperson
+WHERE
+	sales_id NOT IN(
+					SELECT
+						sales_id
+					FROM
+						orders O
+						LEFT JOIN
+						company C
+						ON O.com_id = C.com_id
+					WHERE
+						C.name = 'RED'
+					)
+```
+
+
 
 ##### JOIN和IS NULL
 
@@ -2440,10 +2698,6 @@ ORDER BY
 
 
 
-
-
-
-
 #### [626. Exchange Seats](https://leetcode-cn.com/problems/exchange-seats/)
 
 Mary is a teacher in a middle school and she has a table seat storing students' names and their corresponding seat ids.
@@ -2573,6 +2827,43 @@ CASE WHEN: 一次查询，一次JOIN
 |      | 365 ms, 53.41% | 361 ms, 54.94% | 340 ms, 63.59% |
 |      | 300 ms, 83.30% | 335 ms, 65.67% | 322 ms, 72.15% |
 |      | 265 ms, 98.51% | 277 ms, 94.72% | 274 ms, 95.91% |
+
+#### [627. Swap Salary](https://leetcode-cn.com/problems/swap-salary/)
+
+Given a table salary, such as the one below, that has m=male and f=female values. Swap all f and m values (i.e., change all f values to m and vice versa) with a single update statement and no intermediate temp table.
+
+Note that you must write a single update statement, DO NOT write any select statement for this problem.
+
+ 
+
+Example:
+
+| id   | name | sex  | salary |
+| ---- | ---- | ---- | ------ |
+| 1    | A    | m    | 2500   |
+| 2    | B    | f    | 1500   |
+| 3    | C    | m    | 5500   |
+| 4    | D    | f    | 500    |
+After running your update statement, the above salary table should have the following rows:
+| id   | name | sex  | salary |
+| ---- | ---- | ---- | ------ |
+| 1    | A    | f    | 2500   |
+| 2    | B    | m    | 1500   |
+| 3    | C    | f    | 5500   |
+| 4    | D    | m    | 500    |
+
+##### UPDATE,if函数
+
+```mysql
+# Write your MySQL query statement below
+UPDATE salary
+SET 
+    sex = if(sex = 'f', 'm', 'f')
+```
+
+
+
+
 
 
 
@@ -3015,7 +3306,7 @@ Table: Project
 employee_id is a foreign key to Employee table.
 Table: Employee
 
-​```mysql
+```mysql
 +------------------+---------+
 | Column Name      | Type    |
 +------------------+---------+
@@ -3143,7 +3434,7 @@ Table: Project
 employee_id is a foreign key to Employee table.
 Table: Employee
 
-```mysql
+​```mysql
 +------------------+---------+
 | Column Name      | Type    |
 +------------------+---------+
@@ -3691,6 +3982,196 @@ FROM
     datediff(A2.event_date, login_date_table.login_date) = 1 
 GROUP BY
     login_date_table.login_date
+```
+
+
+
+#### [1179. Reformat Department Table](https://leetcode-cn.com/problems/reformat-department-table/)
+
+##### 我怎么想不到？
+
+```mysql
+SELECT
+    id,
+    SUM(IF(month = 'Jan', revenue, null)) AS Jan_Revenue,
+    SUM(IF(month = 'Feb', revenue, null)) AS Feb_Revenue,
+    SUM(IF(month = 'Mar', revenue, null)) AS Mar_Revenue,
+    SUM(IF(month = 'Apr', revenue, null)) AS Apr_Revenue,
+    SUM(IF(month = 'May', revenue, null)) AS May_Revenue,
+    SUM(IF(month = 'Jun', revenue, null)) AS Jun_Revenue,
+    SUM(IF(month = 'Jul', revenue, null)) AS Jul_Revenue,
+    SUM(IF(month = 'Aug', revenue, null)) AS Aug_Revenue,
+    SUM(IF(month = 'Sep', revenue, null)) AS Sep_Revenue,
+    SUM(IF(month = 'Oct', revenue, null)) AS Oct_Revenue,
+    SUM(IF(month = 'Nov', revenue, null)) AS Nov_Revenue,
+    SUM(IF(month = 'Dec', revenue, null)) AS Dec_Revenue
+FROM
+    Department
+GROUP BY
+    id
+```
+
+
+
+##### 超时(13表join的傻逼做法)
+
+```mysql
+# Write your MySQL query statement below
+SELECT
+    DISTINCT t.id,
+    t1.Jan_Revenue,
+    t2.Feb_Revenue,
+    t3.Mar_Revenue,
+    t4.Apr_Revenue,
+    t5.May_Revenue,
+    t6.Jun_Revenue,
+    t7.Jul_Revenue,
+    t8.Aug_Revenue,
+    t9.Sep_Revenue,
+    t10.Oct_Revenue,
+    t11.Nov_Revenue,
+    t12.Dec_Revenue
+FROM
+(
+    SELECT
+        id
+    FROM
+        Department
+) t
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Jan_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Jan' 
+) t1
+ON t.id = t1.id
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Feb_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Feb'
+) t2
+ON t.id = t2.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Mar_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Mar'
+) t3
+ON t.id =t3.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Apr_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Apr'
+) t4
+ON t.id =t4.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS May_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'May'
+) t5
+ON t.id =t5.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Jun_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Jun'
+) t6
+ON t.id =t6.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Jul_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Jul'
+) t7
+ON t.id =t7.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Aug_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Aug'
+) t8
+ON t.id =t8.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Sep_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Sep'
+) t9
+ON t.id =t9.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Oct_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Oct'
+) t10
+ON t.id =t10.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Nov_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Nov'
+) t11
+ON t.id =t11.id 
+LEFT JOIN
+(
+    SELECT
+        id, 
+        revenue AS Dec_Revenue
+    FROM
+        Department
+    WHERE
+        month = 'Dec'
+) t12
+ON t.id =t12.id
+ORDER BY
+    t.id
 ```
 
 
