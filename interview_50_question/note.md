@@ -1,7 +1,3 @@
-[toc]
-
-
-
 # [SQL面试经典50题-简书](https://www.jianshu.com/p/3f27a6dced16)
 
 ## 准备工作
@@ -423,26 +419,19 @@ s_id        s_name      s_age       s_sex       score
 06          Wu Lan      1992-03-01  F           31
 ```
 
-### 17、按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
-
-```sqlite
-SELECT
-    c.c_name,
-    avg(sc.score) avg
-FROM
-    score sc
-    LEFT JOIN
-    course c
-    ON sc.c_id = c.c_id
-GROUP BY
-    sc.c_id
-ORDER BY
-    avg;
-```
-
-理解错了
+### 17、*按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
 
 #### 做傻了
+
+先算出了所有学生的平均成绩做表a，
+
+学生’01‘科目的成绩为表sc1，
+
+学生’02‘科目的成绩为表sc2，
+
+学生’03‘科目的成绩为表sc3，
+
+按照学生学号联结在一起。
 
 ```sqlite
 SELECT
@@ -471,10 +460,10 @@ FROM
     score sc3
     ON a.s_id = sc3.s_id AND sc3.c_id = '03'
 ORDER BY
-    a.s_id;
+    a.avgscore DESC;
 ```
 
-#### 聪明来一遍,好好理解sum（case在做啥）
+#### 聪明的做法：好好理解sum（case在做啥）
 
 ```sqlite
 SELECT
@@ -488,7 +477,7 @@ FROM
 GROUP BY
     s_id
 ORDER BY
-    s_id;
+    avg DESC;
 ```
 
 ### 18、查询各科成绩最高分、最低分和平均分：以如下形式显示：课程ID，课程name，最高分，最低分，平均分，及格率，中等率，优良率，优秀率
@@ -527,7 +516,11 @@ c_id        c_name      max         min         avg         jige        zhongden
 
 ### 19、按各科成绩进行排序，并显示排名
 
-#### query做法
+各科目按照总成绩排名，排名问题。
+
+#### 联合查询
+
+问题是这里的T1和T2是一样的table，重复代码太多，不知道可以复用吗？
 
 ```sqlite
 SELECT
@@ -559,9 +552,50 @@ ORDER BY
     rank;
 ```
 
-#### 这里的T1和T2是一样的table，可以复用吗？
+结果：
 
-#### 函数和变量做法
+```sqlite
+c_id        sum         rank
+----------  ----------  ----------
+02          436         1
+03          411         2
+01          387         3
+Run Time: real 0.004 user 0.000388 sys 0.001134
+```
+
+#### 窗口函数
+
+```sqlite
+SELECT
+    T.c_id,
+    T.sum,
+    rank() over(order by T.sum DESC) as rank
+FROM(SELECT
+        c_id,
+        SUM(score) sum
+    FROM
+        score
+    GROUP BY
+        c_id
+) T
+ORDER BY
+    rank;
+```
+
+结果：
+
+```sqlite
+c_id        sum         rank
+----------  ----------  ----------
+02          436         1
+03          411         2
+01          387         3
+Run Time: real 0.000 user 0.000233 sys 0.000119
+```
+
+#### 函数和变量
+
+sqlite不支持。
 
 ```sqlite
 select a.*,@rank:=@rank+1 as rank from
@@ -571,6 +605,11 @@ group by c_id order by sum(score) desc) a,
 ```
 
 ### 20、查询学生的总成绩并进行排名
+
+排名问题。
+
+#### 联合查询
+
 ```sqlite
 SELECT
     T1.s_id,
@@ -600,6 +639,27 @@ GROUP BY
 ORDER BY
     rank;
 ```
+结果
+```sqlite
+s_id        sum         rank
+----------  ----------  ----------
+01          269         1
+03          240         2
+02          210         3
+07          187         4
+05          163         5
+04          100         6
+06          65          7
+Run Time: real 0.000 user 0.000230 sys 0.000087
+```
+
+#### 窗口函数
+
+```sqlite
+
+```
+
+
 
 ### 21、查询不同老师所教不同课程平均分从高到低显示
 
@@ -634,6 +694,10 @@ t_id        t_name      c_id        avg
 
 ### 22、*查询所有课程的成绩第2名到第3名的学生信息及该课程成绩
 
+TopN问题。
+
+#### 联合子查询
+
 ```sqlite
 SELECT
     a.c_id,
@@ -653,7 +717,58 @@ ORDER BY
     a.c_id,a.score desc;
 ```
 
-存在分数相同：不用分组，用distinct
+存在分数相同：不用分组，用distinct。
+
+结果
+
+```sqlite
+c_id        s_id        score
+----------  ----------  ----------
+01          05          76
+01          02          70
+02          07          89
+02          05          87
+03          07          98
+03          02          80
+03          03          80
+Run Time: real 0.003 user 0.000315 sys 0.000660
+```
+
+#### 窗口函数
+
+```sqlite
+SELECT
+    T.c_id,
+    T.s_id,
+    T.score
+FROM(
+    SELECT
+        c_id,
+        s_id,
+        score,
+        dense_rank() over( partition by c_id order by score DESC) as rank
+    FROM
+        score) T
+WHERE
+    T.rank in(2,3);
+```
+
+结果：
+
+```sqlite
+c_id        s_id        score
+----------  ----------  ----------
+01          05          76
+01          02          70
+02          07          89
+02          05          87
+03          07          98
+03          02          80
+03          03          80
+Run Time: real 0.002 user 0.000251 sys 0.000144
+```
+
+
 
 ### 23、统计各科成绩各分数段人数：课程编号,课程名称,[100-85],[85-70],[70-60],[0-60]及所占百分比
 
@@ -1155,16 +1270,34 @@ WHERE
 
 # 题型汇总
 
+## 简单查询
+
+简单条件，可能需要表的联结
+
+## 分组汇总
+
+使用group by语句
+
+典型题：17
+
 ## TopN问题
 
 1. 联合子查询
 2. 分别查各组的Top N 再union，mysql允许对union的对象用括号圈起来，sqlite就不行。
+3. 窗口函数
 
-## Rank问题
+典型题：22
+## 排名问题
 
-理解rank的含义，有多少个分数比你的分数多？还是有多少人比你的分数多？
+1. 使用联合查询做
 
-可能出现表重复，有没有办法解决？
+   理解rank的含义，有多少个分数比你的分数多？还是有多少人比你的分数多？
+
+   可能出现表重复，有没有办法解决？
+   
+2. 使用窗口函数做
+
+典型题：19，20
 
 ## 时间问题
 
@@ -1172,11 +1305,9 @@ sqlite的时间函数跟mysql不一样。
 
 
 
+# todo
 
+今日整理到22题
 
-
-
-
-
-
+20题的窗口函数方法需补充
 
