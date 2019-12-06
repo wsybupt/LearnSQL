@@ -25,7 +25,6 @@
 | ----------------------------- | ---- | ---------------------------------- | ---------- |
 | 175. 组合两个表               | 简单 | JOIN                               | 2019-11-22 |
 | 182. 查找重复的电子邮箱       | 简单 | GROUP BY                           | 2019-11-21 |
-|                               |      | 窗口函数                           |            |
 | 595. 大的国家                 | 简单 | QUERY                              | 2019-11-21 |
 |                               |      | UNION 代替 OR                      | 2019-11-26 |
 | 620. 有趣的电影               | 简单 | QUERY                              | 2019-11-22 |
@@ -471,22 +470,6 @@ GROUP BY
 HAVING
     COUNT(Email) >1;
 ```
-
-##### ???窗口函数
-
-四轮测试，最高93%
-with New as 
-(
-    SELECT distinct Email,Count(Email) over(partition by Email) as Num from [Person]
-)
-select Email from New where Num>1;
-
-作者：chen-nan-2
-链接：https://leetcode-cn.com/problems/two-sum/solution/countchuang-kou-han-shu-chao-yue-92yong-hu-by-chen/
-来源：力扣（LeetCode）
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
-
-
 
 #### [183. Customers Who Never Order](https://leetcode-cn.com/problems/customers-who-never-order/)
 
@@ -3434,7 +3417,7 @@ Table: Project
 employee_id is a foreign key to Employee table.
 Table: Employee
 
-​```mysql
+```mysql
 +------------------+---------+
 | Column Name      | Type    |
 +------------------+---------+
@@ -3452,7 +3435,7 @@ The query result format is in the following example:
 
 Project table:
 
-```mysql
+​```mysql
 +-------------+-------------+
 | project_id  | employee_id |
 +-------------+-------------+
