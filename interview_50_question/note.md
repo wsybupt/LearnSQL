@@ -1,5 +1,13 @@
 # [SQL面试经典50题-简书](https://www.jianshu.com/p/3f27a6dced16)
 
+参照链接做的，原贴是使用mysql做的，我这里是使用sqlite做的，差别比较大的地方有：
+
+1. UNION 套括号的支持
+
+2. 时间函数
+
+大部分题不难，都是简单查询，最后我做了题型汇总共参考选择。
+
 ## 准备工作
 
 ### sqlite创建数据库
@@ -656,7 +664,33 @@ Run Time: real 0.000 user 0.000230 sys 0.000087
 #### 窗口函数
 
 ```sqlite
+SELECT
+    T.s_id,
+    T.sum,
+    rank() over (order by sum DESC) rank
+FROM(
+  SELECT
+      s_id,
+      SUM(score) sum
+  FROM
+      score
+  GROUP BY
+      s_id) T;
+```
 
+结果：
+
+```sqlite
+s_id        sum         rank
+----------  ----------  ----------
+01          269         1
+03          240         2
+02          210         3
+07          187         4
+05          163         5
+04          100         6
+06          65          7
+Run Time: real 0.001 user 0.000167 sys 0.000110
 ```
 
 
@@ -792,6 +826,10 @@ GROUP BY
 
 ### 24、查询学生平均成绩及其名次
 
+同20题
+
+#### 联合查询
+
 ```sqlite
 SELECT
     s1.s_id,
@@ -823,13 +861,61 @@ ORDER BY
     rank;
 ```
 
+结果：
+
+```sqlite
+s_id        avg         rank
+----------  ----------  ----------
+07          93.5        1
+01          89.6666666  2
+05          81.5        3
+03          80.0        4
+02          70.0        5
+04          33.3333333  6
+06          32.5        7
+Run Time: real 0.001 user 0.000196 sys 0.000148
+```
+
+#### 窗口函数
+
+```sqlite
+SELECT
+    T.s_id,
+    T.avg,
+    rank() over (ORDER BY avg DESC) rank
+FROM
+    (
+    SELECT
+      s_id,
+      AVG(score) avg
+    FROM
+      score
+    GROUP BY
+      s_id) T;
+```
+
+结果
+
+```sqlite
+s_id        avg         rank
+----------  ----------  ----------
+07          93.5        1
+01          89.6666666  2
+05          81.5        3
+03          80.0        4
+02          70.0        5
+04          33.3333333  6
+06          32.5        7
+Run Time: real 0.002 user 0.000162 sys 0.000122
+```
+
 #### 变量做法
 
 sqlite不支持
 
 ### 25、*查询各科成绩前三名的记录
 
-#### 猴子出的傻招（有错）
+#### UNION(不一定支持)
 
 ```sqlite
 (
@@ -858,14 +944,6 @@ LIMIT 3;
 
 http://www.cocoachina.com/articles/82278
 
-#### 简书的答案：联合子查询
-
-```sqlite
-select a.c_id,a.s_id,a.score 
-from score a 
-where (select count(b.s_id) from score b where a.c_id=b.c_id and a.score<b.score)<3 
-group by a.c_id,a.s_id;
-```
 #### 联合子查询
 
 
@@ -886,6 +964,64 @@ WHERE(
       )<3
 ORDER BY
     a.c_id,a.score DESC;
+```
+
+结果：
+
+```sqlite
+c_id        s_id        score
+----------  ----------  ----------
+01          01          80
+01          03          80
+01          05          76
+02          01          90
+02          07          89
+02          05          87
+03          01          99
+03          07          98
+03          02          80
+03          03          80
+Run Time: real 0.002 user 0.000140 sys 0.000154
+```
+
+#### 窗口函数
+
+```sqlite
+SELECT
+    c_id,
+    s_id,
+    score
+FROM
+    (
+     SELECT
+        c_id,
+        s_id,
+        score,
+        dense_rank() over (PARTITION BY c_id ORDER BY score DESC) rank
+    FROM
+        score 
+    ) T
+WHERE
+    rank < 4;
+```
+
+结果：
+
+```sqlite
+c_id        s_id        score
+----------  ----------  ----------
+01          01          80
+01          03          80
+01          05          76
+01          02          70
+02          01          90
+02          07          89
+02          05          87
+03          01          99
+03          07          98
+03          02          80
+03          03          80
+Run Time: real 0.001 user 0.000198 sys 0.00014
 ```
 
 ### 26、查询每门课程被选修的学生数
@@ -1052,7 +1188,7 @@ WHERE
 ```
 
 ### 37、查询不及格的课程
-题目有问题
+题目有问题，课程怎么不及格，应该查学生吧。
 
 ### 38、查询课程编号为01且课程成绩在80分以上的学生的学号和姓名
 
@@ -1082,6 +1218,9 @@ GROUP BY
 ```
 
 ### 40、查询选修"张三"老师所授课程的学生中，成绩最高的学生信息及其成绩
+
+#### MAX 函数
+
 ```sqlite
 SELECT
     s.*,
@@ -1098,7 +1237,16 @@ WHERE
     t.t_name = 'Zhang San'；
 ```
 
-以上这种做法不好。
+结果：
+
+```sqlite
+s_id        s_name      s_age       s_sex       MAX(sc.score)
+----------  ----------  ----------  ----------  -------------
+01          Zhao Lei    1990-01-01  M           90
+Run Time: real 0.011 user 0.000305 sys 0.000756
+```
+
+#### ORDER BY + LIMIT 代替max
 
 ```sqlite
 SELECT
@@ -1117,6 +1265,15 @@ WHERE
 ORDER BY
     sc.score DESC
 LIMIT 1,1;
+```
+
+结果：
+
+```sqlite
+s_id        s_name      s_age       s_sex       score
+----------  ----------  ----------  ----------  ----------
+07          Zheng Zhu   1989-07-01  F           89
+Run Time: real 0.000 user 0.000180 sys 0.000082
 ```
 
 ### 41、查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
@@ -1139,6 +1296,8 @@ ORDER BY
 
 ### 42、查询每门功成绩最好的前两名
 
+#### UNION
+
 mysql可以这样做（网页的答案有误，排序没有倒叙）：
 
 ```mysql
@@ -1151,6 +1310,8 @@ union
 ```
 
 sqlite不支持在union 外面使用括号，去掉括号则提示order by不能在外面。使用联合子查询。
+
+#### 联合子查询
 
 ```sqlite
 SELECT
@@ -1167,6 +1328,57 @@ WHERE
 ORDER BY
     a.c_id,
     a.score DESC;
+```
+
+结果:
+
+```sqlite
+s_id        c_id        score
+----------  ----------  ----------
+01          01          80
+03          01          80
+05          01          76
+01          02          90
+07          02          89
+01          03          99
+07          03          98
+Run Time: real 0.001 user 0.000189 sys 0.000156
+```
+
+#### 窗口函数
+
+```sqlite
+SELECT
+    c_id,
+    s_id,
+    score
+FROM
+    (
+     SELECT
+        c_id,
+        s_id,
+        score,
+        dense_rank() over (PARTITION BY c_id ORDER BY score DESC) rank
+    FROM
+        score 
+    ) T
+WHERE
+    rank < 3;
+```
+
+结果：
+
+```sqlite
+c_id        s_id        score
+----------  ----------  ----------
+01          01          80
+01          03          80
+01          05          76
+02          01          90
+02          07          89
+03          01          99
+03          07          98
+Run Time: real 0.000 user 0.000183 sys 0.000051
 ```
 
 ### 43、统计每门课程的学生选修人数（超过5人的课程才统计）。要求输出课程号和选修人数，查询结果按人数降序排列，若人数相同，按课程号升序排列
@@ -1216,6 +1428,8 @@ HAVING
 
 ### 46、查询各学生的年龄
 
+#### sqlite的julianday函数
+
 
 ```sqlite
 SELECT
@@ -1224,13 +1438,42 @@ SELECT
 FROM
     student s;
 ```
-
+结果：
+```sqlite
+s_id        s_name      s_age       s_sex       age
+----------  ----------  ----------  ----------  ----------------
+01          Zhao Lei    1990-01-01  M           29.9517780829527
+02          Qian Dian   1990-12-21  M           28.9819150692541
+03          Sun Feng    1990-05-20  M           29.5709561651445
+04          Li Yun      1990-08-06  M           29.3572575350075
+05          Zhou Mei    1991-12-01  F           28.036709589802
+06          Wu Lan      1992-03-01  F           27.7873945213089
+07          Zheng Zhu   1989-07-01  F           30.4558876719938
+08          Wang Ju     1990-01-20  F           29.8997232884322
+Run Time: real 0.003 user 0.000110 sys 0.000366
+```
+#### sqlite的strftime函数
 ```sqlite
 SELECT
     s.*,
     strftime('%Y','now') - strftime('%Y',s.s_age) age
 FROM
     student s;
+```
+结果：
+
+```sqlite
+s_id        s_name      s_age       s_sex       age
+----------  ----------  ----------  ----------  ----------
+01          Zhao Lei    1990-01-01  M           29
+02          Qian Dian   1990-12-21  M           29
+03          Sun Feng    1990-05-20  M           29
+04          Li Yun      1990-08-06  M           29
+05          Zhou Mei    1991-12-01  F           28
+06          Wu Lan      1992-03-01  F           27
+07          Zheng Zhu   1989-07-01  F           30
+08          Wang Ju     1990-01-20  F           29
+Run Time: real 0.002 user 0.000094 sys 0.001222
 ```
 
 ### 47、**查询本周过生日的学生
@@ -1278,7 +1521,7 @@ WHERE
 
 使用group by语句
 
-典型题：17
+典型题：17、23、35
 
 ## TopN问题
 
@@ -1286,10 +1529,10 @@ WHERE
 2. 分别查各组的Top N 再union，mysql允许对union的对象用括号圈起来，sqlite就不行。
 3. 窗口函数
 
-典型题：22
+典型题：22、25、42
 ## 排名问题
 
-1. 使用联合查询做
+1. 使用联合查询，按照rank的定义做
 
    理解rank的含义，有多少个分数比你的分数多？还是有多少人比你的分数多？
 
@@ -1302,12 +1545,4 @@ WHERE
 ## 时间问题
 
 sqlite的时间函数跟mysql不一样。
-
-
-
-# todo
-
-今日整理到22题
-
-20题的窗口函数方法需补充
 
