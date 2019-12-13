@@ -72,11 +72,11 @@ s_id        c_id        score       rank        dense_rank  row_number
 Run Time: real 0.004 user 0.000366 sys 0.000869
 ```
 
-rank: 对人按照分数排名，排名代表有多少个人（实际上人数+1）比你高
+rank: 对人按照分数排名，排名代表有多少个人（设为`n`）的分数比你高，`排名`=`n+1`
 
-dense_rank: 对分数按照分数排名，排名代表有多少个分数（实际上分数+1）比你的分数高
+dense_rank: 对分数按照分数排名，排名代表有多少个分数（设为`n`）比你的分数高，`排名`=`n+1`
 
-row_number: 对人按照次序排名，有多少人在你前面
+row_number: 对人按照次序排名，想象站了一列，有多少人（设为`n`）在你前面，`排名`=`n+1`
 
 ### 聚合函数作为窗口函数
 
@@ -153,8 +153,8 @@ s_id        score       current_sum  current_avg  current_count  current_max  cu
 
 ### 排名问题
 
-   参见[sql面试50题](https://github.com/wsybupt/LearnSQL/blob/master/interview_50_question/note.md)中的19、20题（待补充）
+   参见[sql面试50题](https://github.com/wsybupt/LearnSQL/blob/master/interview_50_question/note.md)中的19、20题
 
 ### TopN问题
 
-   参见[sql面试50题](https://github.com/wsybupt/LearnSQL/blob/master/interview_50_question/note.md)中的22题（待补充）
+   参见[sql面试50题](https://github.com/wsybupt/LearnSQL/blob/master/interview_50_question/note.md)中的22、25、42题
