@@ -1428,7 +1428,7 @@ HAVING
 
 ### 46、查询各学生的年龄
 
-#### sqlite的julianday函数
+#### sqlite的julianday函数(不推荐)
 
 
 ```sqlite
@@ -1476,6 +1476,18 @@ s_id        s_name      s_age       s_sex       age
 Run Time: real 0.002 user 0.000094 sys 0.001222
 ```
 
+#### mysql的YEAR()函数
+
+```mysql
+SELECT
+    s_id,
+    s_name,
+    (year(now())-year(s_age)) as '年龄' 
+FROM 
+    student;
+```
+
+
 ### 47、**查询本周过生日的学生
 
 ```sqlite
@@ -1491,6 +1503,8 @@ FROM
 
 ### 49、查询本月过生日的学生
 
+#### sqlite的strftime函数
+
 ```sqlite
 SELECT
     *
@@ -1500,7 +1514,30 @@ WHERE
     strftime('%m',s_age) = strftime('%m','now');
 ```
 
+结果(当前12月)
+
+```sqlite
+s_id        s_name      s_age       s_sex
+----------  ----------  ----------  ----------
+02          Qian Dian   1990-12-21  M
+05          Zhou Mei    1991-12-01  F
+Run Time: real 0.032 user 0.000512 sys 0.002386
+```
+
+#### mysql的month函数，返回当前日期的函数
+
+```mysql
+SELECT
+    *
+FROM
+    student
+WHERE
+    month(s_age) = month(now());
+```
+
 ### 50、查询下月过生日的学生
+
+#### sqlite的strftime函数
 
 ```sqlite
 SELECT
@@ -1509,6 +1546,16 @@ FROM
     student
 WHERE
     strftime('%m',s_age) = strftime('%m','now','+1 months');
+```
+
+结果(当前12月)
+
+```sqlite
+s_id        s_name      s_age       s_sex
+----------  ----------  ----------  ----------
+01          Zhao Lei    1990-01-01  M
+08          Wang Ju     1990-01-20  F
+Run Time: real 0.000 user 0.000073 sys 0.000056
 ```
 
 # 题型汇总
@@ -1545,4 +1592,10 @@ WHERE
 ## 时间问题
 
 sqlite的时间函数跟mysql不一样。
+
+典型题：
+
+计算年龄——46：提取两个日期中的年份，mysql可直接用YEAR函数，sqlite用strftime提取年份
+
+
 
